@@ -1,0 +1,32 @@
+{
+  "n_queries": 50,
+  "mrr": 0.7869,
+  "metrics_by_k": {
+    "k1": {
+      "precision": 0.7,
+      "recall": 0.69,
+      "hit_rate": 0.7
+    },
+    "k3": {
+      "precision": 0.58,
+      "recall": 0.87,
+      "hit_rate": 0.88
+    },
+    "k5": {
+      "precision": 0.5,
+      "recall": 0.88,
+      "hit_rate": 0.88
+    },
+    "k10": {
+      "precision": 0.338,
+      "recall": 0.9,
+      "hit_rate": 0.9
+    }
+  },
+  "latency_ms": {
+    "avg": 426.25,
+    "p50": 419.08,
+    "p95": 484.84,
+    "p99": 603.89
+  }
+}

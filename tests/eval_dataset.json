@@ -1,0 +1,405 @@
+[
+  {
+    "id": "q001",
+    "query": "Quy định về tốc độ và khoảng cách giữa các xe khi tham gia giao thông",
+    "ground_truth": "Người lái xe phải tuân thủ quy định về tốc độ và bảo đảm khoảng cách an toàn với xe đi liền trước; phải điều chỉnh tốc độ phù hợp điều kiện thực tế.",
+    "relevant_doc_ids": ["36/2024/QH15:d12"],
+    "relevant_titles": ["36/2024/QH15 - Điều 12. Chấp hành quy định về tốc độ và khoảng cách giữa các xe"],
+    "category": "quy_tac_giao_thong"
+  },
+  {
+    "id": "q002",
+    "query": "Người lái xe mô tô xe gắn máy có phải đội mũ bảo hiểm không?",
+    "ground_truth": "Người lái xe mô tô, xe gắn máy và người ngồi trên xe phải đội mũ bảo hiểm có cài quai đúng quy cách.",
+    "relevant_doc_ids": ["36/2024/QH15:d33"],
+    "relevant_titles": ["36/2024/QH15 - Điều 33. Người lái xe, người được chở, hàng hóa xếp trên xe mô tô, xe gắn máy"],
+    "category": "xe_may"
+  },
+  {
+    "id": "q003",
+    "query": "Quy tắc sử dụng làn đường khi tham gia giao thông đường bộ",
+    "ground_truth": "Phương tiện tham gia giao thông phải đi bên phải theo chiều đi, đúng làn đường quy định. Phương tiện tốc độ thấp phải đi về phía bên phải.",
+    "relevant_doc_ids": ["36/2024/QH15:d13"],
+    "relevant_titles": ["36/2024/QH15 - Điều 13. Sử dụng làn đường"],
+    "category": "quy_tac_giao_thong"
+  },
+  {
+    "id": "q004",
+    "query": "Quy định dừng xe đỗ xe đúng quy định như thế nào?",
+    "ground_truth": "Dừng xe, đỗ xe phải thực hiện ở nơi có lề đường, vỉa hè hoặc bãi đỗ xe; không được dừng đỗ xe trên phần đường xe chạy, trên cầu.",
+    "relevant_doc_ids": ["36/2024/QH15:d18"],
+    "relevant_titles": ["36/2024/QH15 - Điều 18. Dừng xe, đỗ xe"],
+    "category": "quy_tac_giao_thong"
+  },
+  {
+    "id": "q005",
+    "query": "Điều kiện để xe cơ giới được tham gia giao thông đường bộ",
+    "ground_truth": "Xe cơ giới phải đảm bảo tiêu chuẩn kỹ thuật an toàn, bảo vệ môi trường, có đăng ký xe, biển số xe hợp lệ và đã mua bảo hiểm bắt buộc trách nhiệm dân sự.",
+    "relevant_doc_ids": ["36/2024/QH15:d35"],
+    "relevant_titles": ["36/2024/QH15 - Điều 35. Điều kiện phương tiện tham gia giao thông đường bộ"],
+    "category": "phuong_tien"
+  },
+  {
+    "id": "q006",
+    "query": "Khi nào không được vượt xe? Điều kiện để vượt xe hợp lệ",
+    "ground_truth": "Không được vượt tại nơi đường vòng, đường hẹp, nơi tầm nhìn bị che khuất, trên cầu, nơi có biển cấm vượt. Khi vượt phải có đủ khoảng trống phía trước.",
+    "relevant_doc_ids": ["36/2024/QH15:d14"],
+    "relevant_titles": ["36/2024/QH15 - Điều 14. Vượt xe và nhường đường cho xe xin vượt"],
+    "category": "quy_tac_giao_thong"
+  },
+  {
+    "id": "q007",
+    "query": "Nhường đường khi đến gần đường giao nhau như thế nào?",
+    "ground_truth": "Khi đến gần đường giao nhau, người điều khiển phải giảm tốc độ và nhường đường cho xe đi từ phải sang, xe ưu tiên.",
+    "relevant_doc_ids": ["36/2024/QH15:d22"],
+    "relevant_titles": ["36/2024/QH15 - Điều 22. Nhường đường tại nơi đường giao nhau"],
+    "category": "quy_tac_giao_thong"
+  },
+  {
+    "id": "q008",
+    "query": "Quy định về sử dụng đèn xe vào ban đêm và trong hầm",
+    "ground_truth": "Khi trời tối hoặc trong hầm đường bộ, xe phải bật đèn chiếu sáng phía trước và đèn đỏ phía sau. Khi gặp xe ngược chiều phải chuyển sang đèn chiếu gần.",
+    "relevant_doc_ids": ["36/2024/QH15:d20"],
+    "relevant_titles": ["36/2024/QH15 - Điều 20. Sử dụng đèn"],
+    "category": "quy_tac_giao_thong"
+  },
+  {
+    "id": "q009",
+    "query": "Xe ô tô chở hàng có được chở người ngồi thùng xe không?",
+    "ground_truth": "Chỉ được chở người trên thùng xe ô tô chở hàng trong các trường hợp nhất định theo quy định; không được chở người trên mui, thành xe.",
+    "relevant_doc_ids": ["36/2024/QH15:d28"],
+    "relevant_titles": ["36/2024/QH15 - Điều 28. Trường hợp chở người trên xe ô tô chở hàng"],
+    "category": "van_chuyen"
+  },
+  {
+    "id": "q010",
+    "query": "Quy định về giao thông trên đường cao tốc",
+    "ground_truth": "Trên đường cao tốc, xe phải đi đúng làn, tuân thủ tốc độ tối thiểu, cấm dừng đỗ tùy tiện, cấm quay đầu, lùi xe. Khi xe bị hỏng phải đưa vào làn khẩn cấp.",
+    "relevant_doc_ids": ["36/2024/QH15:d25"],
+    "relevant_titles": ["36/2024/QH15 - Điều 25. Giao thông trên đường cao tốc"],
+    "category": "duong_cao_toc"
+  },
+  {
+    "id": "q011",
+    "query": "Các hành vi bị nghiêm cấm trong tham gia giao thông đường bộ",
+    "ground_truth": "Nghiêm cấm điều khiển xe không có giấy phép lái xe, sử dụng rượu bia vượt nồng độ cho phép, sử dụng chất ma túy, dùng điện thoại khi lái xe, phóng nhanh vượt ẩu.",
+    "relevant_doc_ids": ["36/2024/QH15:d9"],
+    "relevant_titles": ["36/2024/QH15 - Điều 9. Các hành vi bị nghiêm cấm"],
+    "category": "cam_ket"
+  },
+  {
+    "id": "q012",
+    "query": "Người lái xe đạp phải tuân thủ quy định gì khi tham gia giao thông?",
+    "ground_truth": "Người điều khiển xe đạp phải đi bên phải đường, không đi hàng ngang từ 3 xe trở lên, không buông cả hai tay khi điều khiển xe.",
+    "relevant_doc_ids": ["36/2024/QH15:d31"],
+    "relevant_titles": ["36/2024/QH15 - Điều 31. Người điều khiển, người được chở, hàng hóa xếp trên xe thô sơ"],
+    "category": "xe_tho_so"
+  },
+  {
+    "id": "q013",
+    "query": "Báo hiệu đường bộ bao gồm những loại gì?",
+    "ground_truth": "Báo hiệu đường bộ gồm: hiệu lệnh của người điều khiển giao thông, tín hiệu đèn giao thông, biển báo hiệu, vạch kẻ đường, cọc tiêu và tường bảo vệ, hàng rào chắn.",
+    "relevant_doc_ids": ["36/2024/QH15:d11"],
+    "relevant_titles": ["36/2024/QH15 - Điều 11. Chấp hành báo hiệu đường bộ"],
+    "category": "bao_hieu"
+  },
+  {
+    "id": "q014",
+    "query": "Phương tiện giao thông đường bộ theo luật là gì?",
+    "ground_truth": "Phương tiện giao thông đường bộ là các loại xe gồm: xe cơ giới, xe thô sơ, xe máy chuyên dùng và các loại xe tương tự.",
+    "relevant_doc_ids": ["36/2024/QH15:d2"],
+    "relevant_titles": ["36/2024/QH15 - Điều 2. Giải thích từ ngữ"],
+    "category": "dinh_nghia"
+  },
+  {
+    "id": "q015",
+    "query": "Phân loại phương tiện giao thông đường bộ như thế nào?",
+    "ground_truth": "Xe cơ giới gồm: xe ô tô, xe mô tô, xe gắn máy. Xe thô sơ gồm: xe đạp, xe xích lô, xe kéo. Xe máy chuyên dùng gồm máy kéo, xe máy thi công.",
+    "relevant_doc_ids": ["36/2024/QH15:d34"],
+    "relevant_titles": ["36/2024/QH15 - Điều 34. Phân loại phương tiện giao thông đường bộ"],
+    "category": "phuong_tien"
+  },
+  {
+    "id": "q016",
+    "query": "Cách tránh xe đi ngược chiều trên đường hẹp không phân làn",
+    "ground_truth": "Trên đường không phân chia thành hai chiều xe chạy riêng biệt, khi gặp xe ngược chiều hai xe phải giảm tốc độ và giữ khoảng cách an toàn; xe đi phía có chướng ngại vật phải nhường đường.",
+    "relevant_doc_ids": ["36/2024/QH15:d17"],
+    "relevant_titles": ["36/2024/QH15 - Điều 17. Tránh xe đi ngược chiều"],
+    "category": "quy_tac_giao_thong"
+  },
+  {
+    "id": "q017",
+    "query": "Thủ tục đấu giá biển số xe ô tô như thế nào?",
+    "ground_truth": "Biển số xe ô tô, xe mô tô, xe gắn máy được đưa ra đấu giá do cơ quan nhà nước có thẩm quyền tổ chức. Người trúng đấu giá phải nộp tiền và được cấp biển số xe.",
+    "relevant_doc_ids": ["36/2024/QH15:d37"],
+    "relevant_titles": ["36/2024/QH15 - Điều 37. Đấu giá biển số xe"],
+    "category": "bien_so"
+  },
+  {
+    "id": "q018",
+    "query": "Xe ô tô vận chuyển hành khách phải đảm bảo điều kiện an toàn gì?",
+    "ground_truth": "Xe ô tô vận chuyển hành khách phải đủ điều kiện kỹ thuật, có thiết bị giám sát hành trình, người lái xe phải có giấy phép lái xe phù hợp và đủ điều kiện sức khỏe.",
+    "relevant_doc_ids": ["36/2024/QH15:d45"],
+    "relevant_titles": ["36/2024/QH15 - Điều 45. Bảo đảm trật tự, an toàn giao thông đường bộ đối với xe ô tô vận chuyển hành khách"],
+    "category": "van_chuyen"
+  },
+  {
+    "id": "q019",
+    "query": "Khi đến đường ngang giao với đường sắt phải làm gì?",
+    "ground_truth": "Khi có hiệu lệnh của nhân viên gác chắn hoặc đèn tín hiệu, phải dừng xe trước vạch dừng. Khi không có gác chắn, phải quan sát và nhường đường cho tàu hỏa.",
+    "relevant_doc_ids": ["36/2024/QH15:d24"],
+    "relevant_titles": ["36/2024/QH15 - Điều 24. Giao thông tại đường ngang, cầu chung đường sắt"],
+    "category": "duong_sat"
+  },
+  {
+    "id": "q020",
+    "query": "Xe mô tô 2 bánh được chở bao nhiêu người?",
+    "ground_truth": "Xe mô tô 2 bánh chỉ được chở tối đa một người. Trường hợp chở người bệnh đi cấp cứu hoặc trẻ em dưới 7 tuổi thì được chở thêm không quá một người.",
+    "relevant_doc_ids": ["36/2024/QH15:d33"],
+    "relevant_titles": ["36/2024/QH15 - Điều 33. Người lái xe, người được chở, hàng hóa xếp trên xe mô tô, xe gắn máy"],
+    "category": "xe_may"
+  },
+  {
+    "id": "q021",
+    "query": "Luật Trật tự an toàn giao thông đường bộ 2024 điều chỉnh những vấn đề gì?",
+    "ground_truth": "Luật quy định về quy tắc, phương tiện, người tham gia giao thông đường bộ, chỉ huy điều khiển, tuần tra kiểm soát, giải quyết tai nạn giao thông, trách nhiệm quản lý nhà nước.",
+    "relevant_doc_ids": ["36/2024/QH15:d1"],
+    "relevant_titles": ["36/2024/QH15 - Điều 1. Phạm vi điều chỉnh"],
+    "category": "pham_vi"
+  },
+  {
+    "id": "q022",
+    "query": "Trách nhiệm kiểm định an toàn kỹ thuật xe cơ giới thuộc về ai?",
+    "ground_truth": "Chủ xe cơ giới có trách nhiệm đưa xe đi kiểm định định kỳ. Cơ sở đăng kiểm chịu trách nhiệm về kết quả kiểm định và cấp giấy chứng nhận.",
+    "relevant_doc_ids": ["36/2024/QH15:d41", "36/2024/QH15:d43"],
+    "relevant_titles": [
+      "36/2024/QH15 - Điều 41. Bảo đảm chất lượng an toàn kỹ thuật và bảo vệ môi trường",
+      "36/2024/QH15 - Điều 43. Trách nhiệm của cơ sở đăng kiểm"
+    ],
+    "category": "kiem_dinh"
+  },
+  {
+    "id": "q023",
+    "query": "Phương tiện nào không được phép đi vào đường cao tốc?",
+    "ground_truth": "Xe thô sơ, xe gắn máy và các phương tiện không đủ tốc độ tối thiểu theo quy định không được đi vào đường cao tốc.",
+    "relevant_doc_ids": ["36/2024/QH15:d25"],
+    "relevant_titles": ["36/2024/QH15 - Điều 25. Giao thông trên đường cao tốc"],
+    "category": "duong_cao_toc"
+  },
+  {
+    "id": "q024",
+    "query": "Xe ô tô chở trẻ em mầm non học sinh phải đáp ứng yêu cầu gì?",
+    "ground_truth": "Xe chở trẻ em mầm non, học sinh phải có màu sơn nhận dạng riêng, lắp thiết bị cảnh báo, có người giám sát trên xe, không chở người khác ngoài học sinh.",
+    "relevant_doc_ids": ["36/2024/QH15:d46"],
+    "relevant_titles": ["36/2024/QH15 - Điều 46. Bảo đảm trật tự, an toàn giao thông đường bộ đối với xe ô tô chở trẻ em mầm non, học sinh"],
+    "category": "van_chuyen"
+  },
+  {
+    "id": "q025",
+    "query": "Những đối tượng nào bị xử phạt vi phạm hành chính về giao thông đường bộ?",
+    "ground_truth": "Cá nhân, tổ chức Việt Nam; cá nhân, tổ chức nước ngoài có hành vi vi phạm hành chính về trật tự an toàn giao thông đường bộ trên lãnh thổ Việt Nam đều bị xử phạt.",
+    "relevant_doc_ids": ["168/2024/NĐ-CP:d2"],
+    "relevant_titles": ["168/2024/NĐ-CP - Điều 2. Đối tượng áp dụng"],
+    "category": "xu_phat"
+  },
+  {
+    "id": "q026",
+    "query": "Các hình thức xử phạt vi phạm hành chính về giao thông đường bộ",
+    "ground_truth": "Hình thức xử phạt gồm: cảnh cáo, phạt tiền, tước quyền sử dụng giấy phép lái xe có thời hạn, trừ điểm giấy phép lái xe, tịch thu phương tiện vi phạm.",
+    "relevant_doc_ids": ["168/2024/NĐ-CP:d3"],
+    "relevant_titles": ["168/2024/NĐ-CP - Điều 3. Hình thức xử phạt vi phạm hành chính"],
+    "category": "xu_phat"
+  },
+  {
+    "id": "q027",
+    "query": "Lái ô tô vi phạm tốc độ quá quy định trên 20 km/h đến 35 km/h bị phạt bao nhiêu?",
+    "ground_truth": "Người điều khiển xe ô tô chạy quá tốc độ quy định trên 20 km/h đến 35 km/h bị phạt tiền từ 6.000.000 đồng đến 8.000.000 đồng.",
+    "relevant_doc_ids": ["168/2024/NĐ-CP:d6"],
+    "relevant_titles": ["168/2024/NĐ-CP - Điều 6. Xử phạt người điều khiển xe ô tô vi phạm quy tắc giao thông đường bộ"],
+    "category": "xu_phat_oto"
+  },
+  {
+    "id": "q028",
+    "query": "Lái xe máy uống rượu bia có nồng độ cồn chưa vượt quá 50 miligam/100 mililít máu bị phạt bao nhiêu?",
+    "ground_truth": "Người điều khiển xe mô tô, xe gắn máy khi trong máu hoặc hơi thở có nồng độ cồn nhưng chưa vượt quá 50 miligam/100 mililít máu hoặc chưa vượt quá 0,25 miligam/1 lít khí thở bị phạt tiền từ 2.000.000 đồng đến 3.000.000 đồng.",
+    "relevant_doc_ids": ["168/2024/NĐ-CP:d7"],
+    "relevant_titles": ["168/2024/NĐ-CP - Điều 7. Xử phạt người điều khiển xe mô tô, xe gắn máy vi phạm quy tắc giao thông đường bộ"],
+    "category": "xu_phat_xemay"
+  },
+  {
+    "id": "q029",
+    "query": "Xe máy chạy quá tốc độ từ 10 km/h đến 20 km/h bị phạt bao nhiêu tiền?",
+    "ground_truth": "Người điều khiển xe mô tô, xe gắn máy chạy quá tốc độ quy định từ 10 km/h đến 20 km/h bị phạt tiền từ 800.000 đồng đến 1.000.000 đồng.",
+    "relevant_doc_ids": ["168/2024/NĐ-CP:d7"],
+    "relevant_titles": ["168/2024/NĐ-CP - Điều 7. Xử phạt người điều khiển xe mô tô, xe gắn máy vi phạm quy tắc giao thông đường bộ"],
+    "category": "xu_phat_xemay"
+  },
+  {
+    "id": "q030",
+    "query": "Người điều khiển xe đạp vi phạm bị phạt như thế nào?",
+    "ground_truth": "Người điều khiển xe đạp không đi bên phải, đi sai làn bị phạt tiền từ 100.000 đồng đến 200.000 đồng. Buông cả hai tay bị phạt từ 150.000 đồng đến 250.000 đồng.",
+    "relevant_doc_ids": ["168/2024/NĐ-CP:d9"],
+    "relevant_titles": ["168/2024/NĐ-CP - Điều 9. Xử phạt người điều khiển xe đạp, xe đạp máy vi phạm quy tắc giao thông đường bộ"],
+    "category": "xu_phat_xe_tho_so"
+  },
+  {
+    "id": "q031",
+    "query": "Lái xe ô tô vi phạm gây tai nạn bỏ chạy không cứu nạn nhân bị phạt bao nhiêu?",
+    "ground_truth": "Người điều khiển xe ô tô gây tai nạn giao thông không dừng ngay phương tiện, không giữ nguyên hiện trường, không trợ giúp người bị nạn bị phạt tiền từ 16.000.000 đồng đến 18.000.000 đồng.",
+    "relevant_doc_ids": ["168/2024/NĐ-CP:d6"],
+    "relevant_titles": ["168/2024/NĐ-CP - Điều 6. Xử phạt người điều khiển xe ô tô vi phạm quy tắc giao thông đường bộ"],
+    "category": "xu_phat_oto"
+  },
+  {
+    "id": "q032",
+    "query": "Lái xe mô tô đi ngược chiều đường một chiều bị phạt bao nhiêu?",
+    "ground_truth": "Người điều khiển xe mô tô, xe gắn máy đi ngược chiều đường một chiều hoặc đi ngược chiều có biển Cấm đi ngược chiều bị phạt tiền từ 4.000.000 đồng đến 6.000.000 đồng.",
+    "relevant_doc_ids": ["168/2024/NĐ-CP:d7"],
+    "relevant_titles": ["168/2024/NĐ-CP - Điều 7. Xử phạt người điều khiển xe mô tô, xe gắn máy vi phạm quy tắc giao thông đường bộ"],
+    "category": "xu_phat_xemay"
+  },
+  {
+    "id": "q033",
+    "query": "Xe ô tô không chấp hành biển báo hiệu đường bộ bị phạt bao nhiêu?",
+    "ground_truth": "Người điều khiển xe ô tô không chấp hành hiệu lệnh, chỉ dẫn của biển báo hiệu bị phạt tiền từ 400.000 đồng đến 600.000 đồng.",
+    "relevant_doc_ids": ["168/2024/NĐ-CP:d6"],
+    "relevant_titles": ["168/2024/NĐ-CP - Điều 6. Xử phạt người điều khiển xe ô tô vi phạm quy tắc giao thông đường bộ"],
+    "category": "xu_phat_oto"
+  },
+  {
+    "id": "q034",
+    "query": "Lái xe máy không chấp hành biển báo đường bộ bị phạt tiền bao nhiêu?",
+    "ground_truth": "Người điều khiển xe mô tô, xe gắn máy không chấp hành hiệu lệnh, chỉ dẫn của biển báo hiệu bị phạt tiền từ 200.000 đồng đến 400.000 đồng.",
+    "relevant_doc_ids": ["168/2024/NĐ-CP:d7"],
+    "relevant_titles": ["168/2024/NĐ-CP - Điều 7. Xử phạt người điều khiển xe mô tô, xe gắn máy vi phạm quy tắc giao thông đường bộ"],
+    "category": "xu_phat_xemay"
+  },
+  {
+    "id": "q035",
+    "query": "Điều kiện về giấy phép lái xe khi tham gia giao thông",
+    "ground_truth": "Người điều khiển xe cơ giới phải có giấy phép lái xe phù hợp với loại xe đang điều khiển, giấy phép còn hiệu lực và không bị tước hoặc đình chỉ.",
+    "relevant_doc_ids": ["168/2024/NĐ-CP:d18"],
+    "relevant_titles": ["168/2024/NĐ-CP - Điều 18. Xử phạt các hành vi vi phạm quy định về điều kiện của người điều khiển xe cơ giới"],
+    "category": "gplx"
+  },
+  {
+    "id": "q036",
+    "query": "Vi phạm về chở hàng quá khổ quá tải bị xử phạt thế nào?",
+    "ground_truth": "Người điều khiển xe ô tô vận chuyển hàng siêu trường, siêu trọng không có giấy phép lưu hành hoặc vi phạm điều kiện ghi trong giấy phép bị phạt tiền và tước giấy phép lái xe.",
+    "relevant_doc_ids": ["168/2024/NĐ-CP:d22"],
+    "relevant_titles": ["168/2024/NĐ-CP - Điều 22. Xử phạt người điều khiển xe ô tô thực hiện hành vi vi phạm quy định về vận chuyển hàng siêu trường, siêu trọng"],
+    "category": "xu_phat_hang_hoa"
+  },
+  {
+    "id": "q037",
+    "query": "Chủ phương tiện để xe không đăng kiểm hoặc hết hạn đăng kiểm bị phạt bao nhiêu?",
+    "ground_truth": "Chủ xe mô tô, xe gắn máy để xe không có giấy chứng nhận kiểm định an toàn kỹ thuật hoặc hết hạn bị phạt tiền từ 200.000 đồng đến 300.000 đồng. Chủ xe ô tô bị phạt từ 300.000 đồng đến 400.000 đồng.",
+    "relevant_doc_ids": ["168/2024/NĐ-CP:d32"],
+    "relevant_titles": ["168/2024/NĐ-CP - Điều 32. Xử phạt chủ phương tiện vi phạm quy định liên quan đến giao thông đường bộ"],
+    "category": "xu_phat_chu_xe"
+  },
+  {
+    "id": "q038",
+    "query": "Lái xe ô tô chở hành khách vi phạm các quy định vận tải hành khách bị xử phạt gì?",
+    "ground_truth": "Người điều khiển xe ô tô chở hành khách vi phạm quy định về vận tải hành khách bị phạt tiền và có thể bị tước giấy phép lái xe tùy theo mức độ vi phạm.",
+    "relevant_doc_ids": ["168/2024/NĐ-CP:d20"],
+    "relevant_titles": ["168/2024/NĐ-CP - Điều 20. Xử phạt người điều khiển xe ô tô chở hành khách vi phạm"],
+    "category": "xu_phat_van_chuyen"
+  },
+  {
+    "id": "q039",
+    "query": "Vận chuyển hàng hóa nguy hiểm vi phạm bị xử phạt như thế nào?",
+    "ground_truth": "Người điều khiển xe ô tô vận chuyển hàng hóa nguy hiểm không có giấy phép, không đủ điều kiện bị phạt tiền và tước giấy phép lái xe có thời hạn.",
+    "relevant_doc_ids": ["168/2024/NĐ-CP:d23"],
+    "relevant_titles": ["168/2024/NĐ-CP - Điều 23. Xử phạt người điều khiển xe ô tô vi phạm quy định về vận chuyển hàng hoá nguy hiểm"],
+    "category": "xu_phat_hang_hoa"
+  },
+  {
+    "id": "q040",
+    "query": "Thời hiệu xử phạt vi phạm hành chính về giao thông đường bộ là bao lâu?",
+    "ground_truth": "Thời hiệu xử phạt vi phạm hành chính về giao thông đường bộ là 1 năm kể từ ngày vi phạm hành chính được thực hiện.",
+    "relevant_doc_ids": ["168/2024/NĐ-CP:d4"],
+    "relevant_titles": ["168/2024/NĐ-CP - Điều 4. Thời hiệu xử phạt vi phạm hành chính"],
+    "category": "xu_phat"
+  },
+  {
+    "id": "q041",
+    "query": "Tước quyền sử dụng giấy phép lái xe có thời hạn tối đa là bao lâu?",
+    "ground_truth": "Giấy phép lái xe bị tước quyền sử dụng có thời hạn theo quy định tại từng điều khoản cụ thể; mức tước phụ thuộc vào tính chất, mức độ vi phạm.",
+    "relevant_doc_ids": ["168/2024/NĐ-CP:d5"],
+    "relevant_titles": ["168/2024/NĐ-CP - Điều 5. Tước quyền sử dụng giấy phép, chứng chỉ hành nghề có thời hạn"],
+    "category": "gplx"
+  },
+  {
+    "id": "q042",
+    "query": "Hành khách đi xe vi phạm quy định trật tự an toàn giao thông bị xử phạt không?",
+    "ground_truth": "Hành khách đi xe vi phạm quy định về trật tự an toàn giao thông như mang theo vũ khí, chất cháy nổ bị xử phạt tiền theo quy định.",
+    "relevant_doc_ids": ["168/2024/NĐ-CP:d33"],
+    "relevant_titles": ["168/2024/NĐ-CP - Điều 33. Xử phạt hành khách đi xe vi phạm quy định về trật tự, an toàn giao thông"],
+    "category": "xu_phat"
+  },
+  {
+    "id": "q043",
+    "query": "Lái xe ô tô vượt xe trái quy định bị phạt bao nhiêu?",
+    "ground_truth": "Người điều khiển xe ô tô vượt xe trong trường hợp không được vượt hoặc vượt xe tại đoạn đường có biển cấm vượt bị phạt tiền từ 4.000.000 đồng đến 6.000.000 đồng.",
+    "relevant_doc_ids": ["168/2024/NĐ-CP:d6"],
+    "relevant_titles": ["168/2024/NĐ-CP - Điều 6. Xử phạt người điều khiển xe ô tô vi phạm quy tắc giao thông đường bộ"],
+    "category": "xu_phat_oto"
+  },
+  {
+    "id": "q044",
+    "query": "Vi phạm vận chuyển hàng quá tải xe tải bị xử phạt bao nhiêu?",
+    "ground_truth": "Người điều khiển xe ô tô tải vi phạm quy định về vận chuyển hàng hóa quá tải bị phạt tiền và tước giấy phép lái xe tùy theo mức độ quá tải.",
+    "relevant_doc_ids": ["168/2024/NĐ-CP:d21"],
+    "relevant_titles": ["168/2024/NĐ-CP - Điều 21. Xử phạt người điều khiển xe ô tô tải vi phạm"],
+    "category": "xu_phat_hang_hoa"
+  },
+  {
+    "id": "q045",
+    "query": "Xe máy chuyên dùng vi phạm quy định giao thông bị xử phạt thế nào?",
+    "ground_truth": "Người điều khiển xe máy chuyên dùng vi phạm quy tắc giao thông đường bộ bị phạt tiền theo quy định tại Điều 8 Nghị định 168/2024/NĐ-CP.",
+    "relevant_doc_ids": ["168/2024/NĐ-CP:d8"],
+    "relevant_titles": ["168/2024/NĐ-CP - Điều 8. Xử phạt người điều khiển xe máy chuyên dùng vi phạm quy tắc giao thông đường bộ"],
+    "category": "xu_phat"
+  },
+  {
+    "id": "q046",
+    "query": "Sản xuất lắp ráp biển số xe trái phép bị xử phạt như thế nào?",
+    "ground_truth": "Hành vi sản xuất, lắp ráp trái phép phương tiện giao thông hoặc sản xuất, mua bán biển số xe trái phép bị xử phạt tiền và tịch thu tang vật theo quy định.",
+    "relevant_doc_ids": ["168/2024/NĐ-CP:d31"],
+    "relevant_titles": ["168/2024/NĐ-CP - Điều 31. Xử phạt hành vi sản xuất, lắp ráp trái phép phương tiện giao thông; sản xuất, mua, bán biển số xe trái phép"],
+    "category": "xu_phat"
+  },
+  {
+    "id": "q047",
+    "query": "Lái xe ô tô không có đèn chiếu sáng đèn tín hiệu bị phạt bao nhiêu?",
+    "ground_truth": "Người điều khiển xe ô tô không có đủ đèn chiếu sáng, đèn soi biển số, đèn báo hãm, đèn tín hiệu bị phạt tiền từ 400.000 đồng đến 600.000 đồng.",
+    "relevant_doc_ids": ["168/2024/NĐ-CP:d13"],
+    "relevant_titles": ["168/2024/NĐ-CP - Điều 13. Xử phạt người điều khiển xe ô tô vi phạm quy định về điều kiện của phương tiện khi tham gia giao thông"],
+    "category": "xu_phat_oto"
+  },
+  {
+    "id": "q048",
+    "query": "Xe ô tô kinh doanh vận tải chở trẻ em vi phạm bị xử phạt gì?",
+    "ground_truth": "Người điều khiển xe ô tô kinh doanh vận tải chở trẻ em mầm non, học sinh vi phạm quy định bị phạt tiền và tước giấy phép lái xe theo quy định Điều 27.",
+    "relevant_doc_ids": ["168/2024/NĐ-CP:d27"],
+    "relevant_titles": ["168/2024/NĐ-CP - Điều 27. Xử phạt người điều khiển xe ô tô kinh doanh vận tải chở trẻ em mầm non, học sinh vi phạm"],
+    "category": "xu_phat_van_chuyen"
+  },
+  {
+    "id": "q049",
+    "query": "Chủ xe ô tô để xe không có bảo hiểm bắt buộc bị phạt bao nhiêu?",
+    "ground_truth": "Chủ xe ô tô để xe tham gia giao thông mà không có bảo hiểm bắt buộc trách nhiệm dân sự còn hiệu lực bị phạt tiền từ 300.000 đồng đến 400.000 đồng.",
+    "relevant_doc_ids": ["168/2024/NĐ-CP:d32"],
+    "relevant_titles": ["168/2024/NĐ-CP - Điều 32. Xử phạt chủ phương tiện vi phạm quy định liên quan đến giao thông đường bộ"],
+    "category": "xu_phat_chu_xe"
+  },
+  {
+    "id": "q050",
+    "query": "Lái xe máy quá tốc độ trên 20 km/h bị phạt bao nhiêu và bị tước bằng không?",
+    "ground_truth": "Người điều khiển xe mô tô, xe gắn máy chạy quá tốc độ quy định trên 20 km/h bị phạt tiền từ 6.000.000 đồng đến 8.000.000 đồng và bị tước giấy phép lái xe.",
+    "relevant_doc_ids": ["168/2024/NĐ-CP:d7"],
+    "relevant_titles": ["168/2024/NĐ-CP - Điều 7. Xử phạt người điều khiển xe mô tô, xe gắn máy vi phạm quy tắc giao thông đường bộ"],
+    "category": "xu_phat_xemay"
+  }
+]

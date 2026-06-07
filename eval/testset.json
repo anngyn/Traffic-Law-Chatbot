@@ -1,0 +1,14 @@
+[
+  {
+    "question": "Người đủ bao nhiêu tuổi thì được lái xe ô tô?",
+    "ground_truth": "Người đủ 18 tuổi trở lên được lái xe ô tô chở người đến 9 chỗ và xe tải dưới 3.5 tấn."
+  },
+  {
+    "question": "Nồng độ cồn cho phép khi lái xe máy là bao nhiêu?",
+    "ground_truth": "Người điều khiển xe máy không được có nồng độ cồn trong máu hoặc hơi thở khi tham gia giao thông."
+  },
+  {
+    "question": "Vượt đèn đỏ bị phạt bao nhiêu tiền đối với xe máy?",
+    "ground_truth": "Người điều khiển xe máy vượt đèn đỏ bị phạt tiền theo quy định tại Nghị định xử phạt vi phạm hành chính trong lĩnh vực giao thông đường bộ."
+  }
+]

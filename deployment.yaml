@@ -1,0 +1,87 @@
+# AWS Bedrock RAG Chatbot Deployment Configuration
+
+project_name: bedrock-rag-chatbot
+version: "1.0.0"
+environment: development
+
+# AWS Configuration
+aws:
+  region: us-east-1
+  profile: default
+
+# S3 Configuration
+s3:
+  bucket_name: rag-traffic-vi
+  create_bucket: true
+  versioning: true
+  encryption: true
+
+# Lambda Functions Configuration
+lambda_functions:
+  rag_orchestrator:
+    handler: lambda_function.lambda_handler
+    runtime: python3.12
+    memory: 1024
+    timeout: 30
+    environment_variables:
+      LOG_LEVEL: INFO
+      ENABLE_METRICS: "true"
+    
+  document_indexer:
+    handler: lambda_function.lambda_handler
+    runtime: python3.12
+    memory: 512
+    timeout: 30
+    environment_variables:
+      LOG_LEVEL: INFO
+      ENABLE_METRICS: "true"
+    
+  health_check:
+    handler: lambda_function.lambda_handler
+    runtime: python3.12
+    memory: 128
+    timeout: 10
+    environment_variables:
+      LOG_LEVEL: INFO
+
+# API Gateway Configuration
+api_gateway:
+  name: bedrock-rag-api
+  stage: prod
+  cors_enabled: true
+  throttling:
+    rate_limit: 1000
+    burst_limit: 2000
+
+# EventBridge Configuration
+eventbridge:
+  rules:
+    - name: s3-document-upload
+      description: "Trigger document indexer on S3 upload"
+      event_pattern:
+        source: ["aws.s3"]
+        detail_type: ["Object Created"]
+
+# CloudWatch Configuration
+cloudwatch:
+  log_retention_days: 30
+  enable_insights: true
+  
+# Monitoring and Alarms
+monitoring:
+  enable_dashboards: true
+  alarms:
+    - name: high_error_rate
+      metric: ErrorRate
+      threshold: 5
+      comparison: GreaterThanThreshold
+    - name: high_latency
+      metric: Duration
+      threshold: 5000
+      comparison: GreaterThanThreshold
+
+# Security Configuration
+security:
+  enable_waf: false  # Not available in Free Tier
+  enable_vpc: false  # Keep simple for Free Tier
+  iam_least_privilege: true

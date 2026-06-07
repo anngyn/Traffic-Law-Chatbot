@@ -1,0 +1,305 @@
+{
+  "version": "36.0.0",
+  "artifacts": {
+    "AI002-ChatbotGiaothong.assets": {
+      "type": "cdk:asset-manifest",
+      "properties": {
+        "file": "AI002-ChatbotGiaothong.assets.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+      }
+    },
+    "AI002-ChatbotGiaothong": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://unknown-account/us-east-1",
+      "properties": {
+        "templateFile": "AI002-ChatbotGiaothong.template.json",
+        "terminationProtection": false,
+        "validateOnSynth": false,
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-us-east-1",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-us-east-1",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1/8ef291d9fe8487dd413b25c87a9732c8e3a97163befa06188d71a62407c5c6bf.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
+        "additionalDependencies": [
+          "AI002-ChatbotGiaothong.assets"
+        ],
+        "lookupRole": {
+          "arn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-lookup-role-${AWS::AccountId}-us-east-1",
+          "requiresBootstrapStackVersion": 8,
+          "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+        }
+      },
+      "dependencies": [
+        "AI002-ChatbotGiaothong.assets"
+      ],
+      "metadata": {
+        "/AI002-ChatbotGiaothong/DocsBucket/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DocsBucketECEA003F"
+          }
+        ],
+        "/AI002-ChatbotGiaothong/DocsBucket/Notifications/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DocsBucketNotificationsDC13BBE9"
+          }
+        ],
+        "/AI002-ChatbotGiaothong/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Role/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleB6FB88EC"
+          }
+        ],
+        "/AI002-ChatbotGiaothong/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Role/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleDefaultPolicy2CF63D36"
+          }
+        ],
+        "/AI002-ChatbotGiaothong/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BucketNotificationsHandler050a0587b7544547bf325f094a3db8347ECC3691"
+          }
+        ],
+        "/AI002-ChatbotGiaothong/SharedLayer/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SharedLayer27DFABF0"
+          }
+        ],
+        "/AI002-ChatbotGiaothong/RagOrchestrator/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RagOrchestratorServiceRole1DEDF8A2"
+          }
+        ],
+        "/AI002-ChatbotGiaothong/RagOrchestrator/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RagOrchestratorServiceRoleDefaultPolicy2CC0D9AD"
+          }
+        ],
+        "/AI002-ChatbotGiaothong/RagOrchestrator/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RagOrchestrator03090D1F"
+          }
+        ],
+        "/AI002-ChatbotGiaothong/RagOrchestrator/LogRetention/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RagOrchestratorLogRetention93D09367"
+          }
+        ],
+        "/AI002-ChatbotGiaothong/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB"
+          }
+        ],
+        "/AI002-ChatbotGiaothong/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRoleDefaultPolicyADDA7DEB"
+          }
+        ],
+        "/AI002-ChatbotGiaothong/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A"
+          }
+        ],
+        "/AI002-ChatbotGiaothong/DocumentIndexer/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DocumentIndexerServiceRole908FA11F"
+          }
+        ],
+        "/AI002-ChatbotGiaothong/DocumentIndexer/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DocumentIndexerServiceRoleDefaultPolicyCE2C813B"
+          }
+        ],
+        "/AI002-ChatbotGiaothong/DocumentIndexer/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DocumentIndexer7C68C1D7"
+          }
+        ],
+        "/AI002-ChatbotGiaothong/DocumentIndexer/LogRetention/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DocumentIndexerLogRetention6608D26B"
+          }
+        ],
+        "/AI002-ChatbotGiaothong/HealthCheck/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HealthCheckServiceRoleC964F23C"
+          }
+        ],
+        "/AI002-ChatbotGiaothong/HealthCheck/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HealthCheckServiceRoleDefaultPolicyAE8FE253"
+          }
+        ],
+        "/AI002-ChatbotGiaothong/HealthCheck/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HealthCheckA1C381C7"
+          }
+        ],
+        "/AI002-ChatbotGiaothong/HealthCheck/LogRetention/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HealthCheckLogRetention285A0C80"
+          }
+        ],
+        "/AI002-ChatbotGiaothong/S3UploadRule/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "S3UploadRule78870954"
+          }
+        ],
+        "/AI002-ChatbotGiaothong/S3UploadRule/AllowEventRuleAI002ChatbotGiaothongDocumentIndexer4085A421": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "S3UploadRuleAllowEventRuleAI002ChatbotGiaothongDocumentIndexer4085A421DF6548EB"
+          }
+        ],
+        "/AI002-ChatbotGiaothong/ChatbotApi/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ChatbotApiF211B502"
+          }
+        ],
+        "/AI002-ChatbotGiaothong/ChatbotApi/CloudWatchRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ChatbotApiCloudWatchRoleD8E3EB91"
+          }
+        ],
+        "/AI002-ChatbotGiaothong/ChatbotApi/Account": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ChatbotApiAccountB559E9CC"
+          }
+        ],
+        "/AI002-ChatbotGiaothong/ChatbotApi/Deployment/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ChatbotApiDeploymentB78958154f37cb78f13996c40edd7026b592fb88"
+          }
+        ],
+        "/AI002-ChatbotGiaothong/ChatbotApi/DeploymentStage.prod/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ChatbotApiDeploymentStageprod27096855"
+          }
+        ],
+        "/AI002-ChatbotGiaothong/ChatbotApi/Endpoint": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ChatbotApiEndpointAA2295B0"
+          }
+        ],
+        "/AI002-ChatbotGiaothong/ChatbotApi/Default/OPTIONS/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ChatbotApiOPTIONSCF12C1F3"
+          }
+        ],
+        "/AI002-ChatbotGiaothong/ChatbotApi/Default/chat/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ChatbotApichat329FA5B8"
+          }
+        ],
+        "/AI002-ChatbotGiaothong/ChatbotApi/Default/chat/OPTIONS/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ChatbotApichatOPTIONSE9EAEBA1"
+          }
+        ],
+        "/AI002-ChatbotGiaothong/ChatbotApi/Default/chat/POST/ApiPermission.AI002ChatbotGiaothongChatbotApiF12C1F76.POST..chat": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ChatbotApichatPOSTApiPermissionAI002ChatbotGiaothongChatbotApiF12C1F76POSTchat4D2A3B28"
+          }
+        ],
+        "/AI002-ChatbotGiaothong/ChatbotApi/Default/chat/POST/ApiPermission.Test.AI002ChatbotGiaothongChatbotApiF12C1F76.POST..chat": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ChatbotApichatPOSTApiPermissionTestAI002ChatbotGiaothongChatbotApiF12C1F76POSTchatBF8E2D70"
+          }
+        ],
+        "/AI002-ChatbotGiaothong/ChatbotApi/Default/chat/POST/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ChatbotApichatPOST2BCC1CB9"
+          }
+        ],
+        "/AI002-ChatbotGiaothong/ChatbotApi/Default/health/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ChatbotApihealthF7D1D137"
+          }
+        ],
+        "/AI002-ChatbotGiaothong/ChatbotApi/Default/health/OPTIONS/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ChatbotApihealthOPTIONSD1A10F0F"
+          }
+        ],
+        "/AI002-ChatbotGiaothong/ChatbotApi/Default/health/GET/ApiPermission.AI002ChatbotGiaothongChatbotApiF12C1F76.GET..health": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ChatbotApihealthGETApiPermissionAI002ChatbotGiaothongChatbotApiF12C1F76GEThealth6FEA1069"
+          }
+        ],
+        "/AI002-ChatbotGiaothong/ChatbotApi/Default/health/GET/ApiPermission.Test.AI002ChatbotGiaothongChatbotApiF12C1F76.GET..health": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ChatbotApihealthGETApiPermissionTestAI002ChatbotGiaothongChatbotApiF12C1F76GEThealthAF9D64A5"
+          }
+        ],
+        "/AI002-ChatbotGiaothong/ChatbotApi/Default/health/GET/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ChatbotApihealthGET2350D364"
+          }
+        ],
+        "/AI002-ChatbotGiaothong/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/AI002-ChatbotGiaothong/BootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BootstrapVersion"
+          }
+        ],
+        "/AI002-ChatbotGiaothong/CheckBootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CheckBootstrapVersion"
+          }
+        ]
+      },
+      "displayName": "AI002-ChatbotGiaothong"
+    },
+    "Tree": {
+      "type": "cdk:tree",
+      "properties": {
+        "file": "tree.json"
+      }
+    }
+  }
+}

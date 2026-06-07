@@ -1,0 +1,95 @@
+# AWS Bedrock RAG Chatbot .gitignore
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+myenv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# AWS
+.aws/
+*.pem
+*.key
+
+# Logs
+*.log
+logs/
+
+# Testing
+.coverage
+.pytest_cache/
+.tox/
+htmlcov/
+
+# Build artifacts
+*.zip
+lambda-packages/
+deployment-packages/
+
+# Local data
+/tmp/
+/temp/
+*.tmp
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Model files (too large for git)
+*.bin
+*.safetensors
+models/
+
+# Vector indices
+*.index
+*.faiss
+
+# Documentation builds
+docs/_build/
+
+# CloudFormation
+packaged-template.yaml
+samconfig.toml

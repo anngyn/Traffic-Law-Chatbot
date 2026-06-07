@@ -12,11 +12,6 @@ from src.domain.Retrieval.chatbot import ChatBot
 def test_chatbot_api():
     # Load environment variables
     load_dotenv()
-    
-    google_api_key = os.getenv('GOOGLE_API_KEY')
-    if not google_api_key:
-        print("Lỗi: Không tìm thấy GOOGLE_API_KEY trong file .env")
-        return
 
     # Khởi tạo các đường dẫn y hệt như trong main.py
     root_dir = current_dir
@@ -28,7 +23,6 @@ def test_chatbot_api():
     print("Đang khởi tạo cấu trúc ChatBot...")
     try:
         chatbot = ChatBot(
-            google_api_key=google_api_key,
             stopwords_path=stopwords_path,
             folder_path=folder_path,
             keyword_file=keyword_file,

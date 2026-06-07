@@ -1,287 +1,169 @@
-# from __future__ import annotations
-
-# import json
-
-# import fitz  # PyMuPDF
-
-# # Extract text from the PDF
-
-
-# def extract_text_from_pdf(pdf_path):
-#     text = ''
-#     pdf_document = fitz.open(pdf_path)
-#     for page_num in range(len(pdf_document)):
-#         page = pdf_document.load_page(page_num)
-#         text += page.get_text('text')  # Extract text from each page
-#     return text
-
-
-# def extract_sections_by_dieu(text, section_type='ATGT'):
-#     lines = text.splitlines()
-#     extracted_data = []
-#     current_chuong = ''
-#     current_muc = ''
-#     current_dieu = ''
-#     chuong_content = ''
-#     muc_content = ''
-#     dieu_content = ''
-
-#     for line in lines:
-#         line = line.strip()
-
-#         # Detect "Chương"
-#         if line.startswith('Chương'):
-#             if current_dieu:  # Save previous Điều if available
-#                 content = f'{chuong_content}\n{muc_content}\n{dieu_content}'
-#                 extracted_data.append({
-#                     'title': current_dieu,
-#                     'content': content,
-#                     'type': section_type,
-#                 })
-#             current_chuong = line  # Set current Chương
-#             chuong_content = line  # Reset Chương content
-#             current_muc = ''  # Reset Mục for a new Chương
-#             muc_content = ''  # Reset Mục content
-#             dieu_content = ''  # Reset Điều content
-
-#         # Detect "Mục"
-#         elif line.startswith('Mục'):
-#             if current_dieu:
-#                 content = f'{chuong_content}\n{muc_content}\n{dieu_content}'
-#                 # Save previous Điều if available
-#                 extracted_data.append({
-#                     'title': current_dieu,
-#                     'content': content,
-#                     'type': section_type,
-#                 })
-#             current_muc = line  # Set current Mục
-#             muc_content = line  # Reset Mục content
-#             dieu_content = ''  # Reset Điều content
-
-#         # Detect "Điều"
-#         elif line.startswith('Điều'):
-#             content = f'{chuong_content}\n{muc_content}\n{dieu_content}'
-#             if current_dieu:
-#                 extracted_data.append({
-#                     'title': current_dieu,
-#                     'content': content,
-#                     'type': section_type,
-#                 })
-#             # Combine Chương, Mục, and Điều as title
-#             current_dieu = f'{current_chuong} {current_muc} {line}'
-#             dieu_content = line  # Initialize content for Điều
-
-#         # Otherwise, accumulate content
-#         else:
-#             if current_dieu:  # Add content for Điều
-#                 dieu_content += '\n' + line
-#             elif current_muc:  # Add content for Mục
-#                 muc_content += '\n' + line
-#             elif current_chuong:  # Add content for Chương
-#                 chuong_content += '\n' + line
-
-#     # Save the last Điều after processing all lines
-#     if current_dieu:
-#         extracted_data.append({
-#             'title': current_dieu,
-#             'content': f'{chuong_content}\n{muc_content}\n{dieu_content}',
-#             'type': section_type,
-#         })
-
-#     return extracted_data
-
-# # Save extracted data to JSON file
-
-
-# def save_to_json(data, output_json):
-#     with open(output_json, mode='a', encoding='utf-8') as file:
-#         json.dump(data, file, ensure_ascii=False, indent=4)
-
-
-# # Path to the PDF file
-# # Replace with the actual PDF path
-# pdf_path = r'.\AI002\data\36_2024_QH15_444251.pdf'
-
-# # Path to the output JSON file
-# output_json = r'AI002\data\output.json'
-
-# # Extract text from the PDF
-# text = extract_text_from_pdf(pdf_path)
-# section_type = 'DB'  # You can set it manually to "ATGT" or "DB"
-# data = extract_sections_by_dieu(text, section_type)
-
-# # Save the extracted data to the JSON file
-# save_to_json(data, output_json)
-
-# print(f'Data successfully saved to {output_json}')
-
-
-# crawl_data.py
+# crawl_data.py — extract structured, metadata-rich records from traffic-law PDFs.
+# Chunking is structure-aware: atomic unit = Khoản (never split mid-clause).
 from __future__ import annotations
 
 import json
 import os
+import re
+import sys
+
 import fitz  # PyMuPDF
-import re # Cần cho regex pattern trong hàm mới
 
-# Import SentenceSplitter từ llama_index
-from llama_index.core.node_parser import SentenceSplitter
-from llama_index.core import Document # Cần để tạo Document cho SentenceSplitter
+try:  # Windows consoles default to cp1252; force UTF-8 so Vietnamese logs don't crash.
+    sys.stdout.reconfigure(encoding="utf-8")
+except Exception:
+    pass
 
-# Extract text from the PDF
-def extract_text_from_pdf(pdf_path):
-    text = ''
-    pdf_document = fitz.open(pdf_path)
-    for page_num in range(len(pdf_document)):
-        page = pdf_document.load_page(page_num)
-        text += page.get_text('text')  # Extract text from each page
-    pdf_document.close()
+# OCR config (override via env for Docker/Linux). On Windows the UB-Mannheim default path is used.
+_TESSERACT_CMD = os.getenv("TESSERACT_CMD") or r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+_DEF_TESSDATA = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "data", "tessdata"))
+_TESSDATA_DIR = os.getenv("TESSDATA_PREFIX") or (_DEF_TESSDATA if os.path.isdir(_DEF_TESSDATA) else None)
+
+# Boilerplate / noise (digital signature block, gazette header, standalone page numbers).
+_NOISE = [
+    re.compile(r"^Người ký:", re.I),
+    re.compile(r"^Email:", re.I),
+    re.compile(r"^Cơ quan:", re.I),
+    re.compile(r"^Thời gian ký:", re.I),
+    re.compile(r"CÔNG BÁO/Số", re.I),
+    re.compile(r"^\d{1,4}$"),
+]
+_CHUONG = re.compile(r"^Chương\s+([IVXLCDM\d]+)\b", re.I)
+_MUC = re.compile(r"^Mục\s+([IVXLCDM\d]+)\b", re.I)
+_DIEU = re.compile(r"^Điều\s+(\d+)\.\s*(.*)", re.I)
+_KHOAN = re.compile(r"^(\d+)\.\s")
+
+
+def _is_noise(line: str) -> bool:
+    return any(p.search(line) for p in _NOISE)
+
+
+def _refs(text: str) -> list[str]:
+    return sorted(set(re.findall(r"Điều\s+\d+", text)))
+
+
+def extract_text(pdf_path: str) -> str:
+    doc = fitz.open(pdf_path)
+    text = "".join(page.get_text("text") for page in doc)
+    doc.close()
     return text
 
-# Cập nhật hàm extract_sections_by_dieu để bao gồm SentenceSplitter
-def extract_sections_by_dieu(text, section_type='ATGT', max_chunk_size=1000, chunk_overlap=200):
-    lines = text.splitlines()
-    extracted_data = []
-    
-    current_chuong = ''
-    current_muc = ''
-    current_dieu = ''
-    dieu_content_buffer = [] # Buffer để chứa nội dung của Điều hiện tại
 
-    # Khởi tạo SentenceSplitter
-    sentence_splitter = SentenceSplitter(chunk_size=max_chunk_size, chunk_overlap=chunk_overlap)
+def _configure_tesseract():
+    import pytesseract
 
-    def process_and_add_chunk(title, content_buffer):
-        """Xử lý buffer nội dung và thêm vào extracted_data sau khi chia nhỏ."""
-        if not content_buffer:
+    if os.path.exists(_TESSERACT_CMD):
+        pytesseract.pytesseract.tesseract_cmd = _TESSERACT_CMD
+    return pytesseract
+
+
+def _ocr_available() -> bool:
+    try:
+        _configure_tesseract().get_tesseract_version()
+        return True
+    except Exception:
+        return False
+
+
+def extract_text_ocr(pdf_path: str, lang: str = "vie", dpi: int = 300) -> str:
+    import io
+
+    from PIL import Image
+
+    pytesseract = _configure_tesseract()
+    cfg = f"--tessdata-dir {_TESSDATA_DIR}" if _TESSDATA_DIR else ""
+    doc = fitz.open(pdf_path)
+    parts = []
+    for page in doc:
+        img = Image.open(io.BytesIO(page.get_pixmap(dpi=dpi).tobytes("png")))
+        parts.append(pytesseract.image_to_string(img, lang=lang, config=cfg))
+    doc.close()
+    return "\n".join(parts)
+
+
+def load_pdf_text(pdf_path: str, ocr_lang: str = "vie") -> str:
+    """Use the text layer; fall back to OCR when the PDF is scanned (very low text density)."""
+    doc = fitz.open(pdf_path)
+    pages = doc.page_count
+    doc.close()
+    text = extract_text(pdf_path)
+    if len(text.strip()) >= 50 * max(pages, 1):
+        return text
+    if not _ocr_available():
+        print(f"  [Cần OCR nhưng Tesseract chưa sẵn sàng -> bỏ qua] {pdf_path}")
+        return text
+    print(f"  PDF scan: đang OCR {pages} trang (lang={ocr_lang}, có thể mất vài phút)...")
+    return extract_text_ocr(pdf_path, lang=ocr_lang)
+
+
+def extract_records(text: str, doc_id: str, doc_type: str) -> list[dict]:
+    chuong = muc = ""
+    dieu_no = None
+    dieu_title = ""
+    khoan_no = None
+    buf: list[str] = []
+    records: list[dict] = []
+
+    def flush():
+        nonlocal buf
+        if dieu_no is None or not " ".join(buf).strip():
+            buf = []
             return
+        body = " ".join(buf).strip()
+        header = f"Điều {dieu_no}. {dieu_title}".strip()
+        records.append({
+            "title": f"{doc_id} - {header}" + (f" - Khoản {khoan_no}" if khoan_no else ""),
+            "content": f"{header}\n{body}",
+            "doc_id": doc_id,
+            "doc_type": doc_type,
+            "chuong": chuong,
+            "muc": muc,
+            "dieu": dieu_no,
+            "dieu_title": dieu_title,
+            "khoan": khoan_no or 0,
+            "references": _refs(body),
+        })
+        buf = []
 
-        full_content = "\n".join(content_buffer).strip()
-        if not full_content: # Tránh xử lý nội dung rỗng
-            return
-
-        # Tạo Document từ nội dung đã gom được
-        doc_to_split = Document(text=full_content)
-        
-        # Chia nhỏ Document thành nhiều nodes (chunks) nhỏ hơn
-        nodes = sentence_splitter.get_nodes_from_documents([doc_to_split])
-        
-        for node in nodes:
-            # Gắn metadata (tiêu đề và loại) cho từng chunk
-            # Tiêu đề của chunk con sẽ là tiêu đề của Điều/Mục/Chương cha
-            extracted_data.append({
-                'title': title, 
-                'content': node.text.strip(),
-                'type': section_type,
-            })
-
-    # --- Logic chính của hàm ---
-    for line in lines:
-        line = line.strip()
-        if not line: # Bỏ qua dòng trống
+    for raw in text.splitlines():
+        line = raw.strip()
+        if not line or _is_noise(line):
             continue
 
-        # Detect "Chương"
-        if re.match(r'Chương\s+[IVX\d]+\b', line, re.IGNORECASE): # Regex linh hoạt hơn cho Chương
-            # Lưu Điều/Mục/Chương trước đó
-            if current_dieu:
-                process_and_add_chunk(current_dieu, dieu_content_buffer)
-            elif current_muc: # Nếu không có Điều, có thể là nội dung thuộc Mục
-                process_and_add_chunk(f'{current_chuong} {current_muc}', dieu_content_buffer)
-            elif current_chuong: # Nếu không có Điều/Mục, có thể là nội dung thuộc Chương
-                process_and_add_chunk(current_chuong, dieu_content_buffer)
-            
-            # Reset cho Chương mới
-            current_chuong = line
-            current_muc = ''
-            current_dieu = ''
-            dieu_content_buffer = [] # Reset buffer
-            dieu_content_buffer.append(line) # Thêm dòng Chương vào buffer
-        
-        # Detect "Mục"
-        elif re.match(r'Mục\s+[IVX\d]+\b', line, re.IGNORECASE): # Regex linh hoạt hơn cho Mục
-            # Lưu Điều/Mục/Chương trước đó
-            if current_dieu:
-                process_and_add_chunk(current_dieu, dieu_content_buffer)
-            elif current_muc: # Nếu không có Điều, có thể là nội dung thuộc Mục
-                process_and_add_chunk(f'{current_chuong} {current_muc}', dieu_content_buffer)
+        if (m := _CHUONG.match(line)):
+            flush(); chuong = m.group(1); muc = ""; continue
+        if (m := _MUC.match(line)):
+            flush(); muc = m.group(1); continue
+        if (m := _DIEU.match(line)):
+            flush(); dieu_no = int(m.group(1)); dieu_title = m.group(2).strip(); khoan_no = None; continue
+        if (m := _KHOAN.match(line)) and dieu_no is not None:
+            flush(); khoan_no = int(m.group(1)); buf = [line]; continue
 
-            # Reset cho Mục mới
-            current_muc = line
-            current_dieu = ''
-            dieu_content_buffer = [] # Reset buffer
-            dieu_content_buffer.append(line) # Thêm dòng Mục vào buffer
-        
-        # Detect "Điều"
-        elif re.match(r'Điều\s+\d+\.\s*', line, re.IGNORECASE): # Regex cho Điều
-            # Lưu Điều trước đó
-            if current_dieu:
-                process_and_add_chunk(current_dieu, dieu_content_buffer)
-            
-            # Tạo tiêu đề đầy đủ cho Điều mới
-            full_title = current_chuong
-            if current_muc:
-                full_title += f" {current_muc}"
-            full_title += f" {line}"
-            current_dieu = full_title.strip()
-            
-            dieu_content_buffer = [] # Reset buffer
-            dieu_content_buffer.append(line) # Thêm dòng Điều vào buffer
-        
-        # Otherwise, accumulate content
-        else:
-            # Thêm dòng vào buffer của Điều/Mục/Chương hiện tại
-            dieu_content_buffer.append(line)
+        buf.append(line)
 
-    # Xử lý và lưu chunk cuối cùng sau khi đã duyệt hết tất cả các dòng
-    if current_dieu:
-        process_and_add_chunk(current_dieu, dieu_content_buffer)
-    elif current_muc:
-        process_and_add_chunk(f'{current_chuong} {current_muc}', dieu_content_buffer)
-    elif current_chuong:
-        process_and_add_chunk(current_chuong, dieu_content_buffer)
-    # Xử lý nếu có nội dung mà không có Chương/Mục/Điều nào (có thể là phần mở đầu/kết thúc)
-    elif dieu_content_buffer:
-        process_and_add_chunk("Tổng quan/Khác", dieu_content_buffer) # Tạo tiêu đề chung
+    flush()
+    return records
 
-    return extracted_data
 
-# Save extracted data to JSON file
-def save_to_json(data, output_json):
-    with open(output_json, 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=4)
-    print(f'Data successfully saved to {output_json}')
-
-# --- Logic chính để crawl và xử lý các file PDF ---
 if __name__ == "__main__":
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    root_dir = os.path.join(current_dir, '..', '..')
-
-    pdf_paths = [
-        os.path.join(root_dir, 'data', '36-2024-qh15.pdf'),
-        os.path.join(root_dir, 'data', '36-2024-qh15_tiep.pdf'),
-        #os.path.join(root_dir, 'data', '100-2019-nd-cp.pdf'), # Thêm file Nghị định mới
-        
+    root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+    data_dir = os.path.join(root, "data")
+    sources = [
+        ("36-2024-qh15.pdf", "36/2024/QH15", "luat"),
+        ("36-2024-qh15_tiep.pdf", "36/2024/QH15", "luat"),
+        ("168-nd-cp.signed.pdf", "168/2024/NĐ-CP", "nghi_dinh"),
     ]
 
-    output_json_file = os.path.join(root_dir, 'data', 'output.json')
+    all_records: list[dict] = []
+    for fname, doc_id, doc_type in sources:
+        path = os.path.join(data_dir, fname)
+        if not os.path.exists(path):
+            print(f"Bỏ qua (không tìm thấy): {path}")
+            continue
+        print(f"Trích xuất: {fname}")
+        all_records.extend(extract_records(load_pdf_text(path), doc_id, doc_type))
 
-    all_extracted_data = []
-    
-    # Xóa file output.json cũ nếu tồn tại để tránh lỗi JSON khi ghi đè
-    if os.path.exists(output_json_file):
-        os.remove(output_json_file)
-        print(f"Đã xóa file JSON cũ: {output_json_file}")
-
-    for pdf_path in pdf_paths:
-        print(f"Đang trích xuất dữ liệu từ: {pdf_path}")
-        text = extract_text_from_pdf(pdf_path)
-        
-        # Đặt một loại chung cho tất cả hoặc phân biệt tùy theo nhu cầu phân loại sau này
-        section_type = 'LUAT_GTDB' 
-        
-        # Sử dụng hàm extract_sections_by_dieu đã cải tiến
-        data = extract_sections_by_dieu(text, section_type=section_type, max_chunk_size=1000, chunk_overlap=200)
-        all_extracted_data.extend(data)
-    
-    save_to_json(all_extracted_data, output_json_file)
+    out = os.path.join(data_dir, "output.json")
+    with open(out, "w", encoding="utf-8") as f:
+        json.dump(all_records, f, ensure_ascii=False, indent=2)
+    print(f"Đã lưu {len(all_records)} records -> {out}")

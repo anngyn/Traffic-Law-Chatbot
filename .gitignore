@@ -164,4 +164,11 @@ cython_debug/
 /data/chroma_db/
 /data/vncorenlp/
 test_vncore.py
-.kiro/
+.kiro/cdk.out/
+data/chroma_db/
+data/chroma_db.backup.*/
+data/*.pdf
+data/tessdata/
+*.pyc
+__pycache__/
+.env

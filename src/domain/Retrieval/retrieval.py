@@ -1,84 +1,177 @@
-# # Retrieval/retrieval.py
-from llama_index.core.query_engine import CustomQueryEngine
-from llama_index.core.retrievers import BaseRetriever, VectorIndexRetriever
-from llama_index.core.response_synthesizers import BaseSynthesizer, get_response_synthesizer
-from llama_index.llms.bedrock import Bedrock
-from llama_index.core import PromptTemplate
-import os # Cần để lấy API key từ biến môi trường
+# Retrieval/retrieval.py
+from __future__ import annotations
 
-# Prompt định nghĩa tiếng Việt
-qa_prompt = PromptTemplate(
-    "Bạn là trợ lý ảo giúp trả lời các câu hỏi về luật giao thông đường bộ. "
-    "Tôi sẽ cung cấp cho bạn 2 thông tin: Câu hỏi và bối cảnh có chứa câu trả lời. "
-    "Nhiệm vụ của bạn là tạo phản hồi dựa trên 2 thông tin đó. Lưu ý: không tự động thêm thông tin khác.\n\n"
-    "Thông tin ngữ cảnh được cung cấp dưới đây.\n"
-    "---------------------\n"
-    "{context_str}\n"
-    "---------------------\n"
-    "Dựa vào thông tin ngữ cảnh trên và không sử dụng kiến thức bên ngoài, "
-    "hãy trả lời câu hỏi dưới đây.\n"
-    "Câu hỏi: {query_str}\n"
-    "Câu trả lời (bao gồm cả trích dẫn từ tiêu đề):"
+from typing import Any
+
+from langchain_aws import ChatBedrock
+from langchain_core.documents import Document
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate
+
+import config
+
+try:
+    from observability.tracing import get_callbacks
+
+    _CALLBACKS = get_callbacks()
+except Exception:
+    _CALLBACKS = []
+
+qa_prompt = ChatPromptTemplate.from_template(
+    "Bạn là trợ lý ảo giúp trả lời các câu hỏi về luật giao thông đường bộ Việt Nam.\n"
+    "Chỉ trả lời dựa trên ngữ cảnh được cung cấp, không thêm thông tin bên ngoài.\n\n"
+    "QUY TẮC BẮT BUỘC:\n"
+    "- Số tiền phạt, nồng độ cồn, tốc độ km/h, thời hạn tước bằng: TRÍCH NGUYÊN VĂN từ ngữ cảnh, KHÔNG làm tròn hoặc diễn giải lại.\n"
+    "- Nếu ngữ cảnh không có số liệu cụ thể: trả lời 'Không tìm thấy thông tin cụ thể trong dữ liệu.'\n"
+    "- Luôn kèm trích dẫn điều khoản (ví dụ: Điều 7 Nghị định 168/2024/NĐ-CP).\n\n"
+    "Ngữ cảnh:\n---------------------\n{context}\n---------------------\n"
+    "Lịch sử hội thoại:\n{history}\n\n"
+    "Câu hỏi: {question}\n"
+    "Câu trả lời:"
 )
 
-class RAGStringQueryEngine:
-    """Query Engine dành cho RAG."""
-    
-    # Thay đổi type hint cho llm thành Bedrock
-    def __init__(self, retriever: BaseRetriever, synthesizer: BaseSynthesizer, llm: Bedrock, qa_prompt: PromptTemplate):
-        self._retriever = retriever
-        self._response_synthesizer = synthesizer
-        self._llm = llm
-        self._qa_prompt = qa_prompt
 
-    def custom_query(self, query_str: str) -> str:
-        """Xử lý truy vấn và tạo phản hồi từ LLM."""
-        nodes = self._retriever.retrieve(query_str)
-        if not nodes:
-            return "[Response]: Không tìm thấy thông tin liên quan."
+def _format_docs(docs: list[Document]) -> str:
+    return "\n\n".join(
+        f"Tiêu đề: {d.metadata.get('title', 'Không có tiêu đề')}\nNội dung: {d.page_content}"
+        for d in docs
+    )
 
-        context_str = "\n\n".join([
-            f"Tiêu đề: {node.node.metadata.get('title', 'Không có tiêu đề')}\n"
-            f"Nội dung: {node.node.get_content()}"
-            for node in nodes
-        ])
 
-        response = self._llm.complete(
-            self._qa_prompt.format(context_str=context_str, query_str=query_str)
-        )
-        return response
+def _build_chroma_filter(metadata_filter: dict[str, Any] | None) -> dict | None:
+    """Build Chroma $and where-filter from metadata key-value pairs."""
+    if not metadata_filter:
+        return None
+    conditions = []
+    for key, value in metadata_filter.items():
+        if isinstance(value, list):
+            conditions.append({key: {"$in": value}})
+        else:
+            conditions.append({key: {"$eq": value}})
+    if len(conditions) == 1:
+        return conditions[0]
+    return {"$and": conditions}
+
+
+_EXACT_KEYWORDS = [
+    "phạt", "bị phạt", "tiền phạt", "xử phạt", "mức phạt",
+    "km/h", "miligam", "nồng độ", "tước", "trừ điểm",
+    "bao nhiêu tiền", "phạt bao nhiêu", "bao nhiêu năm", "bao nhiêu tháng",
+]
+
+
+def _get_hybrid_weights(question: str) -> tuple[float, float]:
+    """BM25-dominant for exact-value queries; vector-dominant otherwise."""
+    q = question.lower()
+    if any(kw in q for kw in _EXACT_KEYWORDS):
+        return 0.65, 0.35  # BM25 dominant
+    return config.BM25_WEIGHT, config.VECTOR_WEIGHT
+
+
+class _CohereReranker:
+    """LangChain-compatible document compressor using Cohere Rerank v3 on Bedrock."""
+
+    def __init__(self, top_n: int = 5):
+        self.top_n = top_n
+        import boto3
+        self._client = boto3.client("bedrock-runtime", region_name=config.AWS_REGION)
+
+    def compress_documents(self, documents: list[Document], query: str, callbacks=None) -> list[Document]:
+        import json as _json
+        if not documents:
+            return []
+        body = _json.dumps({
+            "query": query,
+            "documents": [d.page_content[:2048] for d in documents],
+            "top_n": min(self.top_n, len(documents)),
+            "api_version": 2,
+        })
+        resp = self._client.invoke_model(modelId="cohere.rerank-v3-5:0", body=body)
+        results = _json.loads(resp["body"].read())["results"]
+        return [documents[r["index"]] for r in results]
+
+
+def _build_retriever(vectorstore, documents, metadata_filter: dict[str, Any] | None = None, question: str = ""):
+    search_kwargs: dict[str, Any] = {"k": config.SIMILARITY_TOP_K}
+    chroma_filter = _build_chroma_filter(metadata_filter)
+    if chroma_filter:
+        search_kwargs["filter"] = chroma_filter
+
+    retriever = vectorstore.as_retriever(search_kwargs=search_kwargs)
+
+    if config.ENABLE_HYBRID and documents:
+        from langchain.retrievers import EnsembleRetriever
+        from langchain_community.retrievers import BM25Retriever
+
+        # Filter BM25 documents to match metadata filter
+        filtered_docs = documents
+        if metadata_filter:
+            filtered_docs = [
+                d for d in documents
+                if all(
+                    (str(d.metadata.get(k)) in [str(v) for v in val]) if isinstance(val, list)
+                    else str(d.metadata.get(k)) == str(val)
+                    for k, val in metadata_filter.items()
+                )
+            ]
+        if filtered_docs:
+            bm25_w, vec_w = _get_hybrid_weights(question)
+            bm25 = BM25Retriever.from_documents(filtered_docs)
+            bm25.k = config.SIMILARITY_TOP_K
+            retriever = EnsembleRetriever(
+                retrievers=[bm25, retriever],
+                weights=[bm25_w, vec_w],
+            )
+
+    return retriever
+
 
 class Retrieval:
-    """Hệ thống quản lý truy vấn và trả lời."""
-    
-    # Cập nhật __init__ để nhận index và google_api_key
-    def __init__(self, index, google_api_key: str, llm_model_name: str = "gemini-pro"):
-        self.index = index
+    """Hybrid RAG (BM25 + vector) với Bedrock Claude, hỗ trợ metadata filtering + graph expansion."""
 
-        # Cấu hình retriever
-        self.retriever = VectorIndexRetriever(
-            index=self.index,
-            similarity_top_k=10,
+    def __init__(self, vectorstore, documents=None):
+        self.vectorstore = vectorstore
+        self.documents = documents
+        self.retriever = _build_retriever(vectorstore, documents, question="")
+        self.llm = ChatBedrock(model_id=config.LLM_MODEL_ID, region_name=config.AWS_REGION)
+        self.chain = (qa_prompt | self.llm | StrOutputParser()).with_config({"callbacks": _CALLBACKS})
+        self._reranker = _CohereReranker(top_n=config.RERANK_TOP_N)
+
+        # Build legal relationship graph for context expansion
+        self.graph = None
+        if documents:
+            from Retrieval.legal_graph import LegalGraph
+            self.graph = LegalGraph(documents)
+
+    def retrieve(self, question: str, metadata_filter: dict[str, Any] | None = None, expand_graph: bool = True) -> list[Document]:
+        """Retrieve documents with optional metadata filtering and graph-based expansion."""
+        if metadata_filter:
+            retriever = _build_retriever(self.vectorstore, self.documents, metadata_filter, question)
+        else:
+            retriever = _build_retriever(self.vectorstore, self.documents, question=question)
+        docs = retriever.invoke(question)
+
+        # Disable graph expansion when filtered to NĐ-CP (penalty corpus):
+        # graph refs are bare strings with no doc prefix → expand adds noise, not signal
+        nd_filter = metadata_filter and metadata_filter.get("doc_id") == "168/2024/NĐ-CP"
+        if expand_graph and not nd_filter and self.graph and docs:
+            related = self.graph.get_related_docs(docs, max_hops=1, max_expand=3)
+            docs = docs + related
+
+        if config.ENABLE_RERANK and docs:
+            docs = self._reranker.compress_documents(docs, question)
+        return docs
+
+    def query_with_context(
+        self, question: str, history: str = "", metadata_filter: dict[str, Any] | None = None
+    ) -> tuple[str, list[Document]]:
+        docs = self.retrieve(question, metadata_filter, expand_graph=True)
+        if not docs:
+            return "Không tìm thấy thông tin liên quan.", []
+        answer = self.chain.invoke(
+            {"context": _format_docs(docs), "history": history or "Không có", "question": question}
         )
+        return answer, docs
 
-        # Cấu hình LLM cho RAG sử dụng Bedrock
-        self.llm = Bedrock(
-            model="anthropic.claude-3-haiku-20240307-v1:0",
-            region_name=os.environ.get("AWS_DEFAULT_REGION", "us-east-1"),
-            aws_access_key_id=os.environ.get("AWS_ACCESS_KEY_ID"),
-            aws_secret_access_key=os.environ.get("AWS_SECRET_ACCESS_KEY")
-        )
-
-        self.synthesizer = get_response_synthesizer(response_mode="compact")
-        self.query_engine = RAGStringQueryEngine(
-            retriever=self.retriever,
-            synthesizer=self.synthesizer,
-            llm=self.llm,
-            qa_prompt=qa_prompt,
-        )
-
-    def query(self, query_str: str) -> str:
-        """Thực hiện truy vấn."""
-        if not self.index: # Nên có kiểm tra này nếu index có thể là None
-            return "[Error]: Index chưa được tạo. Vui lòng lưu dữ liệu và tạo index trước."
-        return self.query_engine.custom_query(query_str)
+    def query(self, question: str, history: str = "", metadata_filter: dict[str, Any] | None = None) -> str:
+        return self.query_with_context(question, history, metadata_filter)[0]

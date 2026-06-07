@@ -1,0 +1,44 @@
+services:
+  api:
+    build: .
+    env_file: .env
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      DATABASE_URL: postgresql+psycopg2://ai002:ai002@db:5432/ai002
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+    depends_on:
+      - redis
+      - db
+
+  ui:
+    build: .
+    command: streamlit run src/domain/main.py --server.port 8501 --server.address 0.0.0.0
+    env_file: .env
+    environment:
+      API_URL: http://api:8000
+    ports:
+      - "8501:8501"
+    depends_on:
+      - api
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ai002
+      POSTGRES_PASSWORD: ai002
+      POSTGRES_DB: ai002
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:

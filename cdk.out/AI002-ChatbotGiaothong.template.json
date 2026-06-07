@@ -1,0 +1,1382 @@
+{
+ "Description": "AI002 - Vietnamese Traffic Law RAG Chatbot (Serverless)",
+ "Resources": {
+  "DocsBucketECEA003F": {
+   "Type": "AWS::S3::Bucket",
+   "Properties": {
+    "BucketEncryption": {
+     "ServerSideEncryptionConfiguration": [
+      {
+       "ServerSideEncryptionByDefault": {
+        "SSEAlgorithm": "AES256"
+       }
+      }
+     ]
+    },
+    "BucketName": {
+     "Fn::Join": [
+      "",
+      [
+       "ai002-rag-traffic-",
+       {
+        "Ref": "AWS::AccountId"
+       }
+      ]
+     ]
+    },
+    "PublicAccessBlockConfiguration": {
+     "BlockPublicAcls": true,
+     "BlockPublicPolicy": true,
+     "IgnorePublicAcls": true,
+     "RestrictPublicBuckets": true
+    },
+    "VersioningConfiguration": {
+     "Status": "Enabled"
+    }
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "AI002-ChatbotGiaothong/DocsBucket/Resource"
+   }
+  },
+  "DocsBucketNotificationsDC13BBE9": {
+   "Type": "Custom::S3BucketNotifications",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "BucketNotificationsHandler050a0587b7544547bf325f094a3db8347ECC3691",
+      "Arn"
+     ]
+    },
+    "BucketName": {
+     "Ref": "DocsBucketECEA003F"
+    },
+    "NotificationConfiguration": {
+     "EventBridgeConfiguration": {}
+    },
+    "Managed": true
+   },
+   "Metadata": {
+    "aws:cdk:path": "AI002-ChatbotGiaothong/DocsBucket/Notifications/Resource"
+   }
+  },
+  "BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleB6FB88EC": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "AI002-ChatbotGiaothong/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Role/Resource"
+   }
+  },
+  "BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleDefaultPolicy2CF63D36": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "s3:PutBucketNotification",
+       "Effect": "Allow",
+       "Resource": "*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleDefaultPolicy2CF63D36",
+    "Roles": [
+     {
+      "Ref": "BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleB6FB88EC"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "AI002-ChatbotGiaothong/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Role/DefaultPolicy/Resource"
+   }
+  },
+  "BucketNotificationsHandler050a0587b7544547bf325f094a3db8347ECC3691": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Description": "AWS CloudFormation handler for \"Custom::S3BucketNotifications\" resources (@aws-cdk/aws-s3)",
+    "Code": {
+     "ZipFile": "import boto3  # type: ignore\nimport json\nimport logging\nimport urllib.request\n\ns3 = boto3.client(\"s3\")\n\nEVENTBRIDGE_CONFIGURATION = 'EventBridgeConfiguration'\nCONFIGURATION_TYPES = [\"TopicConfigurations\", \"QueueConfigurations\", \"LambdaFunctionConfigurations\"]\n\ndef handler(event: dict, context):\n  response_status = \"SUCCESS\"\n  error_message = \"\"\n  try:\n    props = event[\"ResourceProperties\"]\n    notification_configuration = props[\"NotificationConfiguration\"]\n    managed = props.get('Managed', 'true').lower() == 'true'\n    stack_id = event['StackId']\n    old = event.get(\"OldResourceProperties\", {}).get(\"NotificationConfiguration\", {})\n    if managed:\n      config = handle_managed(event[\"RequestType\"], notification_configuration)\n    else:\n      config = handle_unmanaged(props[\"BucketName\"], stack_id, event[\"RequestType\"], notification_configuration, old)\n    s3.put_bucket_notification_configuration(Bucket=props[\"BucketName\"], NotificationConfiguration=config)\n  except Exception as e:\n    logging.exception(\"Failed to put bucket notification configuration\")\n    response_status = \"FAILED\"\n    error_message = f\"Error: {str(e)}. \"\n  finally:\n    submit_response(event, context, response_status, error_message)\n\ndef handle_managed(request_type, notification_configuration):\n  if request_type == 'Delete':\n    return {}\n  return notification_configuration\n\ndef handle_unmanaged(bucket, stack_id, request_type, notification_configuration, old):\n  def get_id(n):\n    n['Id'] = ''\n    strToHash=json.dumps(n, sort_keys=True).replace('\"Name\": \"prefix\"', '\"Name\": \"Prefix\"').replace('\"Name\": \"suffix\"', '\"Name\": \"Suffix\"')\n    return f\"{stack_id}-{hash(strToHash)}\"\n  def with_id(n):\n    n['Id'] = get_id(n)\n    return n\n\n  external_notifications = {}\n  existing_notifications = s3.get_bucket_notification_configuration(Bucket=bucket)\n  for t in CONFIGURATION_TYPES:\n    if request_type == 'Update':\n        old_incoming_ids = [get_id(n) for n in old.get(t, [])]\n        external_notifications[t] = [n for n in existing_notifications.get(t, []) if not get_id(n) in old_incoming_ids]      \n    elif request_type == 'Delete':\n        external_notifications[t] = [n for n in existing_notifications.get(t, []) if not n['Id'].startswith(f\"{stack_id}-\")]\n    elif request_type == 'Create':\n        external_notifications[t] = [n for n in existing_notifications.get(t, [])]\n  if EVENTBRIDGE_CONFIGURATION in existing_notifications:\n    external_notifications[EVENTBRIDGE_CONFIGURATION] = existing_notifications[EVENTBRIDGE_CONFIGURATION]\n\n  if request_type == 'Delete':\n    return external_notifications\n\n  notifications = {}\n  for t in CONFIGURATION_TYPES:\n    external = external_notifications.get(t, [])\n    incoming = [with_id(n) for n in notification_configuration.get(t, [])]\n    notifications[t] = external + incoming\n\n  if EVENTBRIDGE_CONFIGURATION in notification_configuration:\n    notifications[EVENTBRIDGE_CONFIGURATION] = notification_configuration[EVENTBRIDGE_CONFIGURATION]\n  elif EVENTBRIDGE_CONFIGURATION in external_notifications:\n    notifications[EVENTBRIDGE_CONFIGURATION] = external_notifications[EVENTBRIDGE_CONFIGURATION]\n\n  return notifications\n\ndef submit_response(event: dict, context, response_status: str, error_message: str):\n  response_body = json.dumps(\n    {\n      \"Status\": response_status,\n      \"Reason\": f\"{error_message}See the details in CloudWatch Log Stream: {context.log_stream_name}\",\n      \"PhysicalResourceId\": event.get(\"PhysicalResourceId\") or event[\"LogicalResourceId\"],\n      \"StackId\": event[\"StackId\"],\n      \"RequestId\": event[\"RequestId\"],\n      \"LogicalResourceId\": event[\"LogicalResourceId\"],\n      \"NoEcho\": False,\n    }\n  ).encode(\"utf-8\")\n  headers = {\"content-type\": \"\", \"content-length\": str(len(response_body))}\n  try:\n    req = urllib.request.Request(url=event[\"ResponseURL\"], headers=headers, data=response_body, method=\"PUT\")\n    with urllib.request.urlopen(req) as response:\n      print(response.read().decode(\"utf-8\"))\n    print(\"Status code: \" + response.reason)\n  except Exception as e:\n      print(\"send(..) failed executing request.urlopen(..): \" + str(e))"
+    },
+    "Handler": "index.handler",
+    "Role": {
+     "Fn::GetAtt": [
+      "BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleB6FB88EC",
+      "Arn"
+     ]
+    },
+    "Runtime": "python3.11",
+    "Timeout": 300
+   },
+   "DependsOn": [
+    "BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleDefaultPolicy2CF63D36",
+    "BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleB6FB88EC"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "AI002-ChatbotGiaothong/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Resource"
+   }
+  },
+  "SharedLayer27DFABF0": {
+   "Type": "AWS::Lambda::LayerVersion",
+   "Properties": {
+    "CompatibleRuntimes": [
+     "python3.12"
+    ],
+    "Content": {
+     "S3Bucket": {
+      "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1"
+     },
+     "S3Key": "cbd719d9fc18184a3adbbbb2967f5dd5502aa69c9d62056f7744c40738c448b4.zip"
+    },
+    "Description": "Shared utilities (config, models, utils)"
+   },
+   "Metadata": {
+    "aws:cdk:path": "AI002-ChatbotGiaothong/SharedLayer/Resource",
+    "aws:asset:path": "asset.cbd719d9fc18184a3adbbbb2967f5dd5502aa69c9d62056f7744c40738c448b4",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Content"
+   }
+  },
+  "RagOrchestratorServiceRole1DEDF8A2": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "AI002-ChatbotGiaothong/RagOrchestrator/ServiceRole/Resource"
+   }
+  },
+  "RagOrchestratorServiceRoleDefaultPolicy2CC0D9AD": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "bedrock:InvokeModel",
+        "bedrock:InvokeModelWithResponseStream"
+       ],
+       "Effect": "Allow",
+       "Resource": "arn:aws:bedrock:*::foundation-model/*"
+      },
+      {
+       "Action": [
+        "s3:GetObject*",
+        "s3:GetBucket*",
+        "s3:List*"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "DocsBucketECEA003F",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "DocsBucketECEA003F",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "RagOrchestratorServiceRoleDefaultPolicy2CC0D9AD",
+    "Roles": [
+     {
+      "Ref": "RagOrchestratorServiceRole1DEDF8A2"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "AI002-ChatbotGiaothong/RagOrchestrator/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "RagOrchestrator03090D1F": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": {
+      "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1"
+     },
+     "S3Key": "11676296b37149d6d6f9543279520707c15caf1ddf3f211b430963036e33bea3.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "S3_BUCKET_NAME": {
+       "Ref": "DocsBucketECEA003F"
+      },
+      "EMBEDDING_MODEL_ID": "amazon.titan-embed-text-v2:0",
+      "LLM_MODEL_ID": "anthropic.claude-3-haiku-20240307-v1:0",
+      "S3_INDEX_PREFIX": "index/",
+      "TOP_K_RESULTS": "5",
+      "LOG_LEVEL": "INFO"
+     }
+    },
+    "FunctionName": "ai002-rag-orchestrator",
+    "Handler": "lambda_function.handler",
+    "Layers": [
+     {
+      "Ref": "SharedLayer27DFABF0"
+     }
+    ],
+    "MemorySize": 1024,
+    "Role": {
+     "Fn::GetAtt": [
+      "RagOrchestratorServiceRole1DEDF8A2",
+      "Arn"
+     ]
+    },
+    "Runtime": "python3.12",
+    "Timeout": 30
+   },
+   "DependsOn": [
+    "RagOrchestratorServiceRoleDefaultPolicy2CC0D9AD",
+    "RagOrchestratorServiceRole1DEDF8A2"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "AI002-ChatbotGiaothong/RagOrchestrator/Resource",
+    "aws:asset:path": "asset.11676296b37149d6d6f9543279520707c15caf1ddf3f211b430963036e33bea3",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
+   }
+  },
+  "RagOrchestratorLogRetention93D09367": {
+   "Type": "Custom::LogRetention",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A",
+      "Arn"
+     ]
+    },
+    "LogGroupName": {
+     "Fn::Join": [
+      "",
+      [
+       "/aws/lambda/",
+       {
+        "Ref": "RagOrchestrator03090D1F"
+       }
+      ]
+     ]
+    },
+    "RetentionInDays": 30
+   },
+   "Metadata": {
+    "aws:cdk:path": "AI002-ChatbotGiaothong/RagOrchestrator/LogRetention/Resource"
+   }
+  },
+  "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "AI002-ChatbotGiaothong/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/ServiceRole/Resource"
+   }
+  },
+  "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRoleDefaultPolicyADDA7DEB": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "logs:PutRetentionPolicy",
+        "logs:DeleteRetentionPolicy"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRoleDefaultPolicyADDA7DEB",
+    "Roles": [
+     {
+      "Ref": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "AI002-ChatbotGiaothong/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Handler": "index.handler",
+    "Runtime": "nodejs20.x",
+    "Timeout": 900,
+    "Code": {
+     "S3Bucket": {
+      "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1"
+     },
+     "S3Key": "4e26bf2d0a26f2097fb2b261f22bb51e3f6b4b52635777b1e54edbd8e2d58c35.zip"
+    },
+    "Role": {
+     "Fn::GetAtt": [
+      "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB",
+      "Arn"
+     ]
+    }
+   },
+   "DependsOn": [
+    "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRoleDefaultPolicyADDA7DEB",
+    "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "AI002-ChatbotGiaothong/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/Resource",
+    "aws:asset:path": "asset.4e26bf2d0a26f2097fb2b261f22bb51e3f6b4b52635777b1e54edbd8e2d58c35",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
+   }
+  },
+  "DocumentIndexerServiceRole908FA11F": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "AI002-ChatbotGiaothong/DocumentIndexer/ServiceRole/Resource"
+   }
+  },
+  "DocumentIndexerServiceRoleDefaultPolicyCE2C813B": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "bedrock:InvokeModel",
+        "bedrock:InvokeModelWithResponseStream"
+       ],
+       "Effect": "Allow",
+       "Resource": "arn:aws:bedrock:*::foundation-model/*"
+      },
+      {
+       "Action": [
+        "s3:GetObject*",
+        "s3:GetBucket*",
+        "s3:List*",
+        "s3:DeleteObject*",
+        "s3:PutObject",
+        "s3:PutObjectLegalHold",
+        "s3:PutObjectRetention",
+        "s3:PutObjectTagging",
+        "s3:PutObjectVersionTagging",
+        "s3:Abort*"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "DocsBucketECEA003F",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "DocsBucketECEA003F",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "DocumentIndexerServiceRoleDefaultPolicyCE2C813B",
+    "Roles": [
+     {
+      "Ref": "DocumentIndexerServiceRole908FA11F"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "AI002-ChatbotGiaothong/DocumentIndexer/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "DocumentIndexer7C68C1D7": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": {
+      "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1"
+     },
+     "S3Key": "3e253121b8e6e029f30fb504f046f4a76a0795a61af87cab6f754264211fd12b.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "S3_BUCKET_NAME": {
+       "Ref": "DocsBucketECEA003F"
+      },
+      "EMBEDDING_MODEL_ID": "amazon.titan-embed-text-v2:0",
+      "S3_INDEX_PREFIX": "index/",
+      "S3_RAW_PREFIX": "raw/",
+      "LOG_LEVEL": "INFO"
+     }
+    },
+    "FunctionName": "ai002-document-indexer",
+    "Handler": "lambda_function.handler",
+    "Layers": [
+     {
+      "Ref": "SharedLayer27DFABF0"
+     }
+    ],
+    "MemorySize": 512,
+    "Role": {
+     "Fn::GetAtt": [
+      "DocumentIndexerServiceRole908FA11F",
+      "Arn"
+     ]
+    },
+    "Runtime": "python3.12",
+    "Timeout": 60
+   },
+   "DependsOn": [
+    "DocumentIndexerServiceRoleDefaultPolicyCE2C813B",
+    "DocumentIndexerServiceRole908FA11F"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "AI002-ChatbotGiaothong/DocumentIndexer/Resource",
+    "aws:asset:path": "asset.3e253121b8e6e029f30fb504f046f4a76a0795a61af87cab6f754264211fd12b",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
+   }
+  },
+  "DocumentIndexerLogRetention6608D26B": {
+   "Type": "Custom::LogRetention",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A",
+      "Arn"
+     ]
+    },
+    "LogGroupName": {
+     "Fn::Join": [
+      "",
+      [
+       "/aws/lambda/",
+       {
+        "Ref": "DocumentIndexer7C68C1D7"
+       }
+      ]
+     ]
+    },
+    "RetentionInDays": 30
+   },
+   "Metadata": {
+    "aws:cdk:path": "AI002-ChatbotGiaothong/DocumentIndexer/LogRetention/Resource"
+   }
+  },
+  "HealthCheckServiceRoleC964F23C": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "AI002-ChatbotGiaothong/HealthCheck/ServiceRole/Resource"
+   }
+  },
+  "HealthCheckServiceRoleDefaultPolicyAE8FE253": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "s3:GetObject*",
+        "s3:GetBucket*",
+        "s3:List*"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "DocsBucketECEA003F",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "DocsBucketECEA003F",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "HealthCheckServiceRoleDefaultPolicyAE8FE253",
+    "Roles": [
+     {
+      "Ref": "HealthCheckServiceRoleC964F23C"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "AI002-ChatbotGiaothong/HealthCheck/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "HealthCheckA1C381C7": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": {
+      "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1"
+     },
+     "S3Key": "d3cd4ed0c0786aae2758437cd4bc891084db852817a52cb2253409ba391ecdeb.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "S3_BUCKET_NAME": {
+       "Ref": "DocsBucketECEA003F"
+      }
+     }
+    },
+    "FunctionName": "ai002-health-check",
+    "Handler": "lambda_function.handler",
+    "MemorySize": 128,
+    "Role": {
+     "Fn::GetAtt": [
+      "HealthCheckServiceRoleC964F23C",
+      "Arn"
+     ]
+    },
+    "Runtime": "python3.12",
+    "Timeout": 10
+   },
+   "DependsOn": [
+    "HealthCheckServiceRoleDefaultPolicyAE8FE253",
+    "HealthCheckServiceRoleC964F23C"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "AI002-ChatbotGiaothong/HealthCheck/Resource",
+    "aws:asset:path": "asset.d3cd4ed0c0786aae2758437cd4bc891084db852817a52cb2253409ba391ecdeb",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
+   }
+  },
+  "HealthCheckLogRetention285A0C80": {
+   "Type": "Custom::LogRetention",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A",
+      "Arn"
+     ]
+    },
+    "LogGroupName": {
+     "Fn::Join": [
+      "",
+      [
+       "/aws/lambda/",
+       {
+        "Ref": "HealthCheckA1C381C7"
+       }
+      ]
+     ]
+    },
+    "RetentionInDays": 30
+   },
+   "Metadata": {
+    "aws:cdk:path": "AI002-ChatbotGiaothong/HealthCheck/LogRetention/Resource"
+   }
+  },
+  "S3UploadRule78870954": {
+   "Type": "AWS::Events::Rule",
+   "Properties": {
+    "EventPattern": {
+     "detail": {
+      "bucket": {
+       "name": [
+        {
+         "Ref": "DocsBucketECEA003F"
+        }
+       ]
+      },
+      "object": {
+       "key": [
+        {
+         "prefix": "raw/"
+        }
+       ]
+      }
+     },
+     "detail-type": [
+      "Object Created"
+     ],
+     "source": [
+      "aws.s3"
+     ]
+    },
+    "Name": "ai002-s3-doc-upload",
+    "State": "ENABLED",
+    "Targets": [
+     {
+      "Arn": {
+       "Fn::GetAtt": [
+        "DocumentIndexer7C68C1D7",
+        "Arn"
+       ]
+      },
+      "Id": "Target0"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "AI002-ChatbotGiaothong/S3UploadRule/Resource"
+   }
+  },
+  "S3UploadRuleAllowEventRuleAI002ChatbotGiaothongDocumentIndexer4085A421DF6548EB": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "DocumentIndexer7C68C1D7",
+      "Arn"
+     ]
+    },
+    "Principal": "events.amazonaws.com",
+    "SourceArn": {
+     "Fn::GetAtt": [
+      "S3UploadRule78870954",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "AI002-ChatbotGiaothong/S3UploadRule/AllowEventRuleAI002ChatbotGiaothongDocumentIndexer4085A421"
+   }
+  },
+  "ChatbotApiF211B502": {
+   "Type": "AWS::ApiGateway::RestApi",
+   "Properties": {
+    "Description": "AI002 Vietnamese Traffic Law RAG API",
+    "Name": "ai002-traffic-rag"
+   },
+   "Metadata": {
+    "aws:cdk:path": "AI002-ChatbotGiaothong/ChatbotApi/Resource"
+   }
+  },
+  "ChatbotApiCloudWatchRoleD8E3EB91": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "apigateway.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
+       ]
+      ]
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "AI002-ChatbotGiaothong/ChatbotApi/CloudWatchRole/Resource"
+   }
+  },
+  "ChatbotApiAccountB559E9CC": {
+   "Type": "AWS::ApiGateway::Account",
+   "Properties": {
+    "CloudWatchRoleArn": {
+     "Fn::GetAtt": [
+      "ChatbotApiCloudWatchRoleD8E3EB91",
+      "Arn"
+     ]
+    }
+   },
+   "DependsOn": [
+    "ChatbotApiF211B502"
+   ],
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "AI002-ChatbotGiaothong/ChatbotApi/Account"
+   }
+  },
+  "ChatbotApiDeploymentB78958154f37cb78f13996c40edd7026b592fb88": {
+   "Type": "AWS::ApiGateway::Deployment",
+   "Properties": {
+    "Description": "AI002 Vietnamese Traffic Law RAG API",
+    "RestApiId": {
+     "Ref": "ChatbotApiF211B502"
+    }
+   },
+   "DependsOn": [
+    "ChatbotApichatOPTIONSE9EAEBA1",
+    "ChatbotApichatPOST2BCC1CB9",
+    "ChatbotApichat329FA5B8",
+    "ChatbotApihealthGET2350D364",
+    "ChatbotApihealthOPTIONSD1A10F0F",
+    "ChatbotApihealthF7D1D137",
+    "ChatbotApiOPTIONSCF12C1F3"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "AI002-ChatbotGiaothong/ChatbotApi/Deployment/Resource"
+   }
+  },
+  "ChatbotApiDeploymentStageprod27096855": {
+   "Type": "AWS::ApiGateway::Stage",
+   "Properties": {
+    "DeploymentId": {
+     "Ref": "ChatbotApiDeploymentB78958154f37cb78f13996c40edd7026b592fb88"
+    },
+    "RestApiId": {
+     "Ref": "ChatbotApiF211B502"
+    },
+    "StageName": "prod"
+   },
+   "DependsOn": [
+    "ChatbotApiAccountB559E9CC"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "AI002-ChatbotGiaothong/ChatbotApi/DeploymentStage.prod/Resource"
+   }
+  },
+  "ChatbotApiOPTIONSCF12C1F3": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "ApiKeyRequired": false,
+    "AuthorizationType": "NONE",
+    "HttpMethod": "OPTIONS",
+    "Integration": {
+     "IntegrationResponses": [
+      {
+       "ResponseParameters": {
+        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
+        "method.response.header.Access-Control-Allow-Origin": "'*'",
+        "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+       },
+       "StatusCode": "204"
+      }
+     ],
+     "RequestTemplates": {
+      "application/json": "{ statusCode: 200 }"
+     },
+     "Type": "MOCK"
+    },
+    "MethodResponses": [
+     {
+      "ResponseParameters": {
+       "method.response.header.Access-Control-Allow-Headers": true,
+       "method.response.header.Access-Control-Allow-Origin": true,
+       "method.response.header.Access-Control-Allow-Methods": true
+      },
+      "StatusCode": "204"
+     }
+    ],
+    "ResourceId": {
+     "Fn::GetAtt": [
+      "ChatbotApiF211B502",
+      "RootResourceId"
+     ]
+    },
+    "RestApiId": {
+     "Ref": "ChatbotApiF211B502"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "AI002-ChatbotGiaothong/ChatbotApi/Default/OPTIONS/Resource"
+   }
+  },
+  "ChatbotApichat329FA5B8": {
+   "Type": "AWS::ApiGateway::Resource",
+   "Properties": {
+    "ParentId": {
+     "Fn::GetAtt": [
+      "ChatbotApiF211B502",
+      "RootResourceId"
+     ]
+    },
+    "PathPart": "chat",
+    "RestApiId": {
+     "Ref": "ChatbotApiF211B502"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "AI002-ChatbotGiaothong/ChatbotApi/Default/chat/Resource"
+   }
+  },
+  "ChatbotApichatOPTIONSE9EAEBA1": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "ApiKeyRequired": false,
+    "AuthorizationType": "NONE",
+    "HttpMethod": "OPTIONS",
+    "Integration": {
+     "IntegrationResponses": [
+      {
+       "ResponseParameters": {
+        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
+        "method.response.header.Access-Control-Allow-Origin": "'*'",
+        "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+       },
+       "StatusCode": "204"
+      }
+     ],
+     "RequestTemplates": {
+      "application/json": "{ statusCode: 200 }"
+     },
+     "Type": "MOCK"
+    },
+    "MethodResponses": [
+     {
+      "ResponseParameters": {
+       "method.response.header.Access-Control-Allow-Headers": true,
+       "method.response.header.Access-Control-Allow-Origin": true,
+       "method.response.header.Access-Control-Allow-Methods": true
+      },
+      "StatusCode": "204"
+     }
+    ],
+    "ResourceId": {
+     "Ref": "ChatbotApichat329FA5B8"
+    },
+    "RestApiId": {
+     "Ref": "ChatbotApiF211B502"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "AI002-ChatbotGiaothong/ChatbotApi/Default/chat/OPTIONS/Resource"
+   }
+  },
+  "ChatbotApichatPOSTApiPermissionAI002ChatbotGiaothongChatbotApiF12C1F76POSTchat4D2A3B28": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "RagOrchestrator03090D1F",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":",
+       {
+        "Ref": "ChatbotApiF211B502"
+       },
+       "/",
+       {
+        "Ref": "ChatbotApiDeploymentStageprod27096855"
+       },
+       "/POST/chat"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "AI002-ChatbotGiaothong/ChatbotApi/Default/chat/POST/ApiPermission.AI002ChatbotGiaothongChatbotApiF12C1F76.POST..chat"
+   }
+  },
+  "ChatbotApichatPOSTApiPermissionTestAI002ChatbotGiaothongChatbotApiF12C1F76POSTchatBF8E2D70": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "RagOrchestrator03090D1F",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":",
+       {
+        "Ref": "ChatbotApiF211B502"
+       },
+       "/test-invoke-stage/POST/chat"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "AI002-ChatbotGiaothong/ChatbotApi/Default/chat/POST/ApiPermission.Test.AI002ChatbotGiaothongChatbotApiF12C1F76.POST..chat"
+   }
+  },
+  "ChatbotApichatPOST2BCC1CB9": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "NONE",
+    "HttpMethod": "POST",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":apigateway:us-east-1:lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "RagOrchestrator03090D1F",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "ResourceId": {
+     "Ref": "ChatbotApichat329FA5B8"
+    },
+    "RestApiId": {
+     "Ref": "ChatbotApiF211B502"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "AI002-ChatbotGiaothong/ChatbotApi/Default/chat/POST/Resource"
+   }
+  },
+  "ChatbotApihealthF7D1D137": {
+   "Type": "AWS::ApiGateway::Resource",
+   "Properties": {
+    "ParentId": {
+     "Fn::GetAtt": [
+      "ChatbotApiF211B502",
+      "RootResourceId"
+     ]
+    },
+    "PathPart": "health",
+    "RestApiId": {
+     "Ref": "ChatbotApiF211B502"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "AI002-ChatbotGiaothong/ChatbotApi/Default/health/Resource"
+   }
+  },
+  "ChatbotApihealthOPTIONSD1A10F0F": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "ApiKeyRequired": false,
+    "AuthorizationType": "NONE",
+    "HttpMethod": "OPTIONS",
+    "Integration": {
+     "IntegrationResponses": [
+      {
+       "ResponseParameters": {
+        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
+        "method.response.header.Access-Control-Allow-Origin": "'*'",
+        "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+       },
+       "StatusCode": "204"
+      }
+     ],
+     "RequestTemplates": {
+      "application/json": "{ statusCode: 200 }"
+     },
+     "Type": "MOCK"
+    },
+    "MethodResponses": [
+     {
+      "ResponseParameters": {
+       "method.response.header.Access-Control-Allow-Headers": true,
+       "method.response.header.Access-Control-Allow-Origin": true,
+       "method.response.header.Access-Control-Allow-Methods": true
+      },
+      "StatusCode": "204"
+     }
+    ],
+    "ResourceId": {
+     "Ref": "ChatbotApihealthF7D1D137"
+    },
+    "RestApiId": {
+     "Ref": "ChatbotApiF211B502"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "AI002-ChatbotGiaothong/ChatbotApi/Default/health/OPTIONS/Resource"
+   }
+  },
+  "ChatbotApihealthGETApiPermissionAI002ChatbotGiaothongChatbotApiF12C1F76GEThealth6FEA1069": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "HealthCheckA1C381C7",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":",
+       {
+        "Ref": "ChatbotApiF211B502"
+       },
+       "/",
+       {
+        "Ref": "ChatbotApiDeploymentStageprod27096855"
+       },
+       "/GET/health"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "AI002-ChatbotGiaothong/ChatbotApi/Default/health/GET/ApiPermission.AI002ChatbotGiaothongChatbotApiF12C1F76.GET..health"
+   }
+  },
+  "ChatbotApihealthGETApiPermissionTestAI002ChatbotGiaothongChatbotApiF12C1F76GEThealthAF9D64A5": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "HealthCheckA1C381C7",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":",
+       {
+        "Ref": "ChatbotApiF211B502"
+       },
+       "/test-invoke-stage/GET/health"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "AI002-ChatbotGiaothong/ChatbotApi/Default/health/GET/ApiPermission.Test.AI002ChatbotGiaothongChatbotApiF12C1F76.GET..health"
+   }
+  },
+  "ChatbotApihealthGET2350D364": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "NONE",
+    "HttpMethod": "GET",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":apigateway:us-east-1:lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "HealthCheckA1C381C7",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "ResourceId": {
+     "Ref": "ChatbotApihealthF7D1D137"
+    },
+    "RestApiId": {
+     "Ref": "ChatbotApiF211B502"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "AI002-ChatbotGiaothong/ChatbotApi/Default/health/GET/Resource"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/1WQwU7DMBBEv6V3d2mpOHBsQZyKiFKJa7V1l9TUsaPsmiiy/O/ITlDLad5oxmuvH2H9tILVAgde6vN1ac0J4kFQXxUOfIy8gbgL+kqiXr7cTJPskCkpgy3E2lvKedHKW6PHbCdKymJ7OiPEPY7Uf1LPxruc//NvwWmZg3uuqG8N50pSvDkiMwnDNouyvmHY+6YmIVcO0A85YYh1mF8ULCWFnWlQaMARYk0s286U8IZbrX1wol6ps35syZV979xBsCkTJ6iJfeg15U9Q7yQXf87hTH/pfEnhlO7drVI2yUONa3LjI0gXJKlqlIt3DxtYr+F58c3GLPvgxLQE9aS/dLvXSLwBAAA="
+   },
+   "Metadata": {
+    "aws:cdk:path": "AI002-ChatbotGiaothong/CDKMetadata/Default"
+   }
+  }
+ },
+ "Outputs": {
+  "ChatbotApiEndpointAA2295B0": {
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      "https://",
+      {
+       "Ref": "ChatbotApiF211B502"
+      },
+      ".execute-api.us-east-1.",
+      {
+       "Ref": "AWS::URLSuffix"
+      },
+      "/",
+      {
+       "Ref": "ChatbotApiDeploymentStageprod27096855"
+      },
+      "/"
+     ]
+    ]
+   }
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}

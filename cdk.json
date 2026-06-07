@@ -1,0 +1,15 @@
+{
+  "app": "python cdk_app.py",
+  "watch": {
+    "include": ["**"],
+    "exclude": [
+      "README.md", "cdk*.json", "requirements*.txt",
+      "source.bat", "**/__pycache__", "**/.git",
+      "**/.venv", "**/node_modules", "**/cdk.out"
+    ]
+  },
+  "context": {
+    "@aws-cdk/aws-lambda:recognizeLayerVersion": true,
+    "@aws-cdk/core:stackRelativeExports": true
+  }
+}
